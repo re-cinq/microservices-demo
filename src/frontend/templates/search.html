@@ -1,4 +1,4 @@
-<!--
+{{/*
  Copyright 2020 Google LLC
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +12,9 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
--->
+*/}}
 
-{{ define "home" }}
+{{ define "search" }}
 
 {{ template "header" . }}
 <div {{ with $.platform_css }} class="{{.}}" {{ end }}>
@@ -24,27 +24,27 @@
 </div>
 <main role="main" class="home">
 
-  <!-- The image at the top of the home page, displayed on smaller screens. -->
-  <div class="home-mobile-hero-banner d-lg-none"></div>
-
   <div class="container-fluid">
     <div class="row">
-
-      <!-- The image on the left of the home page, displayed on larger screens. -->
-      <!--<div class="col-4 d-none d-lg-block home-desktop-left-image"></div>-->
-      <!-- @TODO: removed temporarily. When uncommenting, also replace below div with this -->
-      <!--<div class="col-12 col-lg-8">-->
-
       <div class="col-12 col-lg-12 px-10-percent">
 
         <div class="row hot-products-row px-xl-6">
 
           <div class="col-12">
             <form method="GET" action="{{ $.baseUrl }}/search" class="d-flex mb-4" style="max-width:480px;">
-              <input type="text" name="q" class="form-control mr-2" placeholder="Search products..." />
+              <input type="text" name="q" value="{{ $.query }}" class="form-control mr-2" placeholder="Search products..." autofocus />
               <button type="submit" class="btn btn-primary">Search</button>
             </form>
-            <h3>Hot Products</h3>
+
+            {{ if $.query }}
+              {{ if $.products }}
+                <h3>Results for &ldquo;{{ $.query }}&rdquo;</h3>
+              {{ else }}
+                <h3>No results for &ldquo;{{ $.query }}&rdquo;</h3>
+              {{ end }}
+            {{ else }}
+              <h3>Search Products</h3>
+            {{ end }}
           </div>
 
           {{ range $.products }}
@@ -62,7 +62,6 @@
 
         </div>
 
-        <!-- Footer for larger screens. -->
         <div class="row d-none d-lg-block home-desktop-footer-row">
           <div class="col-12 p-0">
             {{ template "footer" . }}
@@ -70,13 +69,11 @@
         </div>
 
       </div>
-
     </div>
   </div>
 
 </main>
 
-<!-- Footer for smaller screens. -->
 <div class="d-lg-none">
   {{ template "footer" . }}
 </div>
