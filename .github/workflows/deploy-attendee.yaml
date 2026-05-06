@@ -129,7 +129,7 @@ jobs:
           REPO: ${{ vars.GAR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPO }}
           TAG: attendee-${{ needs.detect.outputs.attendee }}-${{ github.sha }}
         run: |
-          helm upgrade boutique ./helm-chart \
+          helm upgrade --install boutique ./helm-chart \
             --namespace "$NS" \
             -f training/values-training.yaml \
             --reuse-values \
