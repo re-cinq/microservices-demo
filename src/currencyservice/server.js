@@ -151,8 +151,8 @@ function convert (call, callback) {
 
       // Convert: EUR --> to_currency
       const result = _carry({
-        units: euros.units * data[request.to_code],
-        nanos: euros.nanos * data[request.to_code]
+        units: euros.units / data[request.to_code],
+        nanos: euros.nanos / data[request.to_code]
       });
 
       result.units = Math.floor(result.units);
