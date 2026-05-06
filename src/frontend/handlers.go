@@ -119,6 +119,64 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+const maxSearchQueryLen = 100
+
+func (fe *frontendServer) searchHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+
+	query := strings.TrimSpace(r.URL.Query().Get("q"))
+	if query == "" {
+		http.Redirect(w, r, baseUrl+"/", http.StatusFound)
+		return
+	}
+	if len(query) > maxSearchQueryLen {
+		query = query[:maxSearchQueryLen]
+	}
+
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve currencies"), http.StatusInternalServerError)
+		return
+	}
+	results, err := fe.searchProducts(r.Context(), query)
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not search products"), http.StatusInternalServerError)
+		return
+	}
+	cart, err := fe.getCart(r.Context(), sessionID(r))
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve cart"), http.StatusInternalServerError)
+		return
+	}
+
+	type productView struct {
+		Item  *pb.Product
+		Price *pb.Money
+	}
+	ps := make([]productView, len(results))
+	for i, p := range results {
+		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+		if err != nil {
+			renderHTTPError(log, r, w, errors.Wrapf(err, "failed to do currency conversion for product %s", p.GetId()), http.StatusInternalServerError)
+			return
+		}
+		ps[i] = productView{p, price}
+	}
+
+	log.WithField("query", query).WithField("results", len(ps)).Info("search")
+
+	if err := templates.ExecuteTemplate(w, "search", injectCommonTemplateData(r, map[string]interface{}{
+		"show_currency": true,
+		"currencies":    currencies,
+		"query":         query,
+		"products":      ps,
+		"result_count":  len(ps),
+		"cart_size":     cartSize(cart),
+	})); err != nil {
+		log.Error(err)
+	}
+}
+
 func (plat *platformDetails) setPlatformDetails(env string) {
 	if env == "aws" {
 		plat.provider = "AWS"

@@ -66,6 +66,17 @@
                 </a>
                 <div class="controls">
 
+                    <div class="h-controls">
+                        <div class="h-control">
+                            <img src="{{ $.baseUrl }}/static/icons/Hipster_SearchIcon.svg" alt="" class="icon search-icon" />
+                            <form method="GET" class="controls-form" action="{{ $.baseUrl }}/search" role="search">
+                                <input type="text" name="q" placeholder="Search products"
+                                    aria-label="Search products" maxlength="100"
+                                    {{ if $.query }}value="{{ $.query }}"{{ end }} />
+                            </form>
+                        </div>
+                    </div>
+
                     {{ if $.show_currency }}
                     <div class="h-controls">
                         <div class="h-control">
