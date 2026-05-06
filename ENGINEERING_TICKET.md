@@ -22,12 +22,13 @@ units: euros.units / data[request.to_code],
 nanos: euros.nanos / data[request.to_code]
 ```
 
-Example — $109.99 Watch converted to JPY (rate ≈ 150 JPY/EUR):
-- Expected: **¥16,498**
-- Actual: **¥0.73**
+Observed on the live site:
+- **JPY** prices are approximately **30% lower** than the correct value
+- **TRY** prices are approximately **10x lower** than the correct value
+- Currencies close to EUR parity (e.g. CAD ≈ 1.5) show only a small discrepancy
 
-Currencies close to parity with EUR (e.g. CAD ≈ 1.5) show only a small
-discrepancy, which is why the bug went unnoticed for those currencies.
+The magnitude of the error scales with the exchange rate: the higher the rate,
+the further the result diverges from the correct value.
 
 ## Expected Behaviour
 
