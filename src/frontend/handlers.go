@@ -400,6 +400,55 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+func (fe *frontendServer) searchHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	query := strings.TrimSpace(r.URL.Query().Get("q"))
+	log.WithField("query", query).Debug("search")
+
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve currencies"), http.StatusInternalServerError)
+		return
+	}
+	cart, err := fe.getCart(r.Context(), sessionID(r))
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve cart"), http.StatusInternalServerError)
+		return
+	}
+
+	type productView struct {
+		Item  *pb.Product
+		Price *pb.Money
+	}
+	var results []productView
+	if query != "" {
+		products, err := fe.searchProducts(r.Context(), query)
+		if err != nil {
+			renderHTTPError(log, r, w, errors.Wrap(err, "could not search products"), http.StatusInternalServerError)
+			return
+		}
+		results = make([]productView, len(products))
+		for i, p := range products {
+			price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+			if err != nil {
+				renderHTTPError(log, r, w, errors.Wrapf(err, "failed to do currency conversion for product %s", p.GetId()), http.StatusInternalServerError)
+				return
+			}
+			results[i] = productView{p, price}
+		}
+	}
+
+	if err := templates.ExecuteTemplate(w, "search", injectCommonTemplateData(r, map[string]interface{}{
+		"show_currency": true,
+		"currencies":    currencies,
+		"query":         query,
+		"results":       results,
+		"cart_size":     cartSize(cart),
+	})); err != nil {
+		log.Error(err)
+	}
+}
+
 func (fe *frontendServer) assistantHandler(w http.ResponseWriter, r *http.Request) {
 	currencies, err := fe.getCurrencies(r.Context())
 	if err != nil {

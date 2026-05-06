@@ -229,6 +229,49 @@ header .navbar.sub-navbar .controls {
   height: 60px;
 }
 
+header .header-search {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  max-width: 480px;
+  margin: 0 24px;
+}
+
+header .header-search input {
+  flex: 1 1 auto;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #ddd;
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  background-color: #fff;
+  color: #111;
+  min-width: 0;
+}
+
+header .header-search input:focus {
+  border-color: #853B5C;
+}
+
+header .header-search button {
+  height: 38px;
+  padding: 0 18px;
+  border: 1px solid #853B5C;
+  background-color: #853B5C;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+}
+
+header .header-search button:hover {
+  background-color: #6e3049;
+}
+
 header .navbar.sub-navbar .controls a img {
   width: 20px;
   height: 20px;
