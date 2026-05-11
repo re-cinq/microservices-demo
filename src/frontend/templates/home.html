@@ -37,12 +37,26 @@
 
       <div class="col-12 col-lg-12 px-10-percent">
 
+        <div class="row px-xl-6 py-3">
+          <div class="col-12">
+            <form method="GET" action="{{ $.baseUrl }}/" class="d-flex align-items-center">
+              <input type="text" name="q" value="{{ $.search_query }}" placeholder="Search products..." class="form-control" style="max-width: 400px; margin-right: 10px;">
+              <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+          </div>
+        </div>
+
         <div class="row hot-products-row px-xl-6">
 
           <div class="col-12">
-            <h3>Hot Products</h3>
+            <h3>{{ if $.search_query }}Search results for '{{ $.search_query }}'{{ else }}Hot Products{{ end }}</h3>
           </div>
 
+          {{ if and (not $.products) (ne $.search_query "") }}
+          <div class="col-12">
+            <p>No products found for '{{ $.search_query }}'.</p>
+          </div>
+          {{ else }}
           {{ range $.products }}
           <div class="col-md-4 hot-product-card">
             <a href="{{ $.baseUrl }}/product/{{.Item.Id}}">
@@ -54,6 +68,7 @@
               <div class="hot-product-card-price">{{ renderMoney .Price }}</div>
             </div>
           </div>
+          {{ end }}
           {{ end }}
 
         </div>

@@ -64,7 +64,13 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve currencies"), http.StatusInternalServerError)
 		return
 	}
-	products, err := fe.getProducts(r.Context())
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	var products []*pb.Product
+	if q != "" {
+		products, err = fe.searchProducts(r.Context(), q)
+	} else {
+		products, err = fe.getProducts(r.Context())
+	}
 	if err != nil {
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve products"), http.StatusInternalServerError)
 		return
@@ -114,6 +120,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"cart_size":     cartSize(cart),
 		"banner_color":  os.Getenv("BANNER_COLOR"), // illustrates canary deployments
 		"ad":            fe.chooseAd(r.Context(), []string{}, log),
+		"search_query":  q,
 	})); err != nil {
 		log.Error(err)
 	}
