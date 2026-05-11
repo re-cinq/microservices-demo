@@ -48,6 +48,17 @@
 
         <div class="row hot-products-row px-xl-6">
 
+          <div class="col-12 product-search-box">
+            <input
+              type="search"
+              id="product-search-input"
+              class="form-control"
+              placeholder="Search products…"
+              aria-label="Search products"
+              oninput="filterProducts(this.value)"
+            />
+          </div>
+
           <div class="col-12">
             <h3>{{ if $.search_query }}Search results for '{{ $.search_query }}'{{ else }}Hot Products{{ end }}</h3>
           </div>
@@ -71,6 +82,8 @@
           {{ end }}
           {{ end }}
 
+          <p id="no-results-msg" style="display:none;">No products match your search.</p>
+
         </div>
 
         <!-- Footer for larger screens. -->
@@ -91,5 +104,20 @@
 <div class="d-lg-none">
   {{ template "footer" . }}
 </div>
+
+<script>
+function filterProducts(query) {
+  var term = query.trim().toLowerCase();
+  var cards = document.querySelectorAll('.hot-product-card');
+  var visible = 0;
+  cards.forEach(function(card) {
+    var nameEl = card.querySelector('.hot-product-card-name');
+    var match = !term || (nameEl && nameEl.textContent.trim().toLowerCase().indexOf(term) !== -1);
+    card.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  document.getElementById('no-results-msg').style.display = (visible === 0 && term) ? '' : 'none';
+}
+</script>
 
 {{ end }}
