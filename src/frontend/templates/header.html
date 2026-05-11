@@ -66,6 +66,11 @@
                 </a>
                 <div class="controls">
 
+                    <form method="GET" action="{{ $.baseUrl }}/search" class="search-form" role="search">
+                        <input name="q" type="text" required maxlength="200" placeholder="Search products" aria-label="Search products">
+                        <button type="submit" aria-label="Submit search">Search</button>
+                    </form>
+
                     {{ if $.show_currency }}
                     <div class="h-controls">
                         <div class="h-control">

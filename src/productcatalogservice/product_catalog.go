@@ -61,9 +61,11 @@ func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProdu
 	time.Sleep(extraLatency)
 
 	var ps []*pb.Product
+	// Spec FR-002: match the query against product Name only (case-insensitive
+	// substring). Description is intentionally not searched — see
+	// specs/001-product-search/research.md Decision 2.
 	for _, product := range p.parseCatalog() {
-		if strings.Contains(strings.ToLower(product.Name), strings.ToLower(req.Query)) ||
-			strings.Contains(strings.ToLower(product.Description), strings.ToLower(req.Query)) {
+		if strings.Contains(strings.ToLower(product.Name), strings.ToLower(req.Query)) {
 			ps = append(ps, product)
 		}
 	}

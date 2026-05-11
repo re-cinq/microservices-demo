@@ -141,6 +141,75 @@ func (plat *platformDetails) setPlatformDetails(env string) {
 	}
 }
 
+// searchHandler renders the product search results page. The query is read
+// from the URL parameter "q", trimmed, and forwarded to the
+// productcatalogservice SearchProducts RPC for name-only (case-insensitive)
+// substring matching. See specs/001-product-search/ for the full spec.
+func (fe *frontendServer) searchHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	rawQuery := r.URL.Query().Get("q")
+	query := strings.TrimSpace(rawQuery)
+
+	// FR-009: reject queries longer than 200 characters with HTTP 400. Bound
+	// the size before any downstream call so an oversize query cannot become
+	// a DoS vector against the catalog service.
+	const maxQueryLen = 200
+	if len(query) > maxQueryLen {
+		renderHTTPError(log, r, w, errors.New("search query too long (max 200 characters)"), http.StatusBadRequest)
+		return
+	}
+
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve currencies"), http.StatusInternalServerError)
+		return
+	}
+	cart, err := fe.getCart(r.Context(), sessionID(r))
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve cart"), http.StatusInternalServerError)
+		return
+	}
+
+	type searchResultView struct {
+		Item  *pb.Product
+		Price *pb.Money
+	}
+	var items []searchResultView
+
+	// FR-007: an empty or whitespace-only query MUST NOT return the full
+	// catalog. Skip the RPC entirely; the template renders the
+	// "please enter a search term" branch when query == "".
+	if query != "" {
+		products, err := fe.searchProducts(r.Context(), query)
+		if err != nil {
+			renderHTTPError(log, r, w, errors.Wrap(err, "could not search products"), http.StatusInternalServerError)
+			return
+		}
+		items = make([]searchResultView, len(products))
+		for i, p := range products {
+			price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+			if err != nil {
+				renderHTTPError(log, r, w, errors.Wrapf(err, "failed to do currency conversion for product %s", p.GetId()), http.StatusInternalServerError)
+				return
+			}
+			items[i] = searchResultView{p, price}
+		}
+	}
+
+	log.WithField("query", query).WithField("count", len(items)).Info("search")
+
+	if err := templates.ExecuteTemplate(w, "search-results", injectCommonTemplateData(r, map[string]interface{}{
+		"show_currency": true,
+		"currencies":    currencies,
+		"query":         query,
+		"items":         items,
+		"no_matches":    len(items) == 0,
+		"cart_size":     cartSize(cart),
+	})); err != nil {
+		log.Error(err)
+	}
+}
+
 func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	id := mux.Vars(r)["id"]

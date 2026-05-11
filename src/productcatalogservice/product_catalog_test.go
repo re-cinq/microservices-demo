@@ -51,6 +51,14 @@ func TestMain(m *testing.M) {
 		Id:   "abc004",
 		Name: "Product Gamma",
 	})
+	// Added for TestSearchProductsNameOnly: name does NOT contain "beta",
+	// but description does. With name-only matching this must not appear in
+	// SearchProducts("beta") results.
+	mockProductCatalog.catalog.Products = append(mockProductCatalog.catalog.Products, &pb.Product{
+		Id:          "abc005",
+		Name:        "Product Epsilon",
+		Description: "matches beta in description only",
+	})
 
 	os.Exit(m.Run())
 }
@@ -83,7 +91,7 @@ func TestListProducts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(products.Products), 4; got != want {
+	if got, want := len(products.Products), 5; got != want {
 		t.Errorf("got %d, want %d", got, want)
 	}
 }
@@ -97,5 +105,21 @@ func TestSearchProducts(t *testing.T) {
 	}
 	if got, want := len(products.Results), 2; got != want {
 		t.Errorf("got %d, want %d", got, want)
+	}
+}
+
+// TestSearchProductsNameOnly verifies that SearchProducts matches only on
+// product Name, not Description. The fixture in TestMain includes a product
+// whose Name does not contain "beta" but whose Description does — that
+// product must NOT appear in the results.
+func TestSearchProductsNameOnly(t *testing.T) {
+	products, err := mockProductCatalog.SearchProducts(context.Background(),
+		&pb.SearchProductsRequest{Query: "beta"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := len(products.Results), 0; got != want {
+		t.Errorf("got %d, want %d (description-only matches must NOT be returned)", got, want)
 	}
 }
