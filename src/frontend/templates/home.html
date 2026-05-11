@@ -37,14 +37,27 @@
 
       <div class="col-12 col-lg-12 px-10-percent">
 
-        <div class="row hot-products-row px-xl-6">
+        <div class="product-search-wrapper">
+          <label for="product-search" class="product-search-label">Search products</label>
+          <input
+            type="search"
+            id="product-search"
+            class="product-search"
+            aria-label="Search products"
+            aria-controls="hot-products-grid"
+            autocomplete="off"
+            placeholder="Search by product name…"
+          >
+        </div>
+
+        <div id="hot-products-grid" class="row hot-products-row px-xl-6">
 
           <div class="col-12">
             <h3>Hot Products</h3>
           </div>
 
           {{ range $.products }}
-          <div class="col-md-4 hot-product-card">
+          <div class="col-md-4 hot-product-card" data-name="{{ .Item.Name }}">
             <a href="{{ $.baseUrl }}/product/{{.Item.Id}}">
               <img loading="lazy" src="{{ $.baseUrl }}{{.Item.Picture}}">
               <div class="hot-product-card-img-overlay"></div>
@@ -57,6 +70,8 @@
           {{ end }}
 
         </div>
+
+        <p id="product-search-no-results" class="no-results" role="status" aria-live="polite" hidden>No products match your search.</p>
 
         <!-- Footer for larger screens. -->
         <div class="row d-none d-lg-block home-desktop-footer-row">
@@ -76,5 +91,7 @@
 <div class="d-lg-none">
   {{ template "footer" . }}
 </div>
+
+<script defer src="{{ $.baseUrl }}/static/js/product-search.js"></script>
 
 {{ end }}
