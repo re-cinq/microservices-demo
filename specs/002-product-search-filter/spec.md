@@ -36,16 +36,18 @@ A shopper sees all products on the home page. They start typing a word they reme
 
 ### User Story 2 — Clear the filter to see all products (Priority: P2)
 
-A shopper has applied a filter and now wants to browse everything again. They clear the search box (by deleting text or using the browser's native clear control), and immediately all product cards reappear.
+A shopper has applied a filter and now wants to browse everything again. They click an explicit × clear button rendered next to the search box, and immediately all product cards reappear and the button disappears.
 
-**Why this priority**: Without an easy reset, the filter becomes a trap. Users need confidence they can get back to the full catalogue.
+**Why this priority**: Without a visible, consistent reset control the filter becomes a trap. The native browser clear button is browser-specific and not always visible; an explicit button gives all users the same affordance.
 
-**Independent Test**: Apply a filter that hides at least one product. Clear the search input. Confirm every product card is visible again.
+**Independent Test**: Apply a filter that hides at least one product. Confirm the × button is visible. Click it. Confirm every product card is visible again and the × button is gone.
 
 **Acceptance Scenarios**:
 
-1. **Given** a non-empty query is hiding some product cards, **When** the shopper clears the input field, **Then** all product cards become visible again and the no-results message (if shown) disappears.
-2. **Given** the page has just loaded, **When** the shopper has not typed anything, **Then** all product cards are visible and the search box is empty.
+1. **Given** a non-empty query is hiding some product cards, **When** the shopper clicks the × clear button, **Then** the search input is cleared, all product cards become visible, the no-results message (if shown) disappears, and the × button disappears.
+2. **Given** the search input is empty, **Then** the × clear button is not visible.
+3. **Given** the shopper starts typing a query, **When** the first character is entered, **Then** the × clear button appears.
+4. **Given** the page has just loaded, **When** the shopper has not typed anything, **Then** all product cards are visible, the search box is empty, and the × button is not shown.
 
 ---
 
@@ -84,7 +86,8 @@ A shopper types a query that matches no product name. Instead of an empty grid w
 - **FR-004**: Matching MUST be case-insensitive substring matching against the product's display name.
 - **FR-005**: Product cards that do not match the current query MUST be hidden from view; they MUST NOT be removed from the page.
 - **FR-006**: When the active query matches zero products, a "No products match your search" message MUST appear in the grid area.
-- **FR-007**: When the query is cleared, all product cards MUST become visible again and the no-results message MUST disappear.
+- **FR-007**: An explicit × clear button MUST be rendered next to the search input whenever the input contains text, and MUST be hidden when the input is empty.
+- **FR-007b**: Clicking the × button MUST clear the search input, restore all product cards to visible, and hide the no-results message.
 - **FR-008**: The feature MUST NOT trigger any network request, page reload, or URL change as a result of typing in the search box.
 - **FR-009**: The search input MUST be operable by keyboard alone (focus, type, clear).
 

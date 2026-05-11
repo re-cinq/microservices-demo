@@ -44,10 +44,16 @@
           </div>
 
           <div class="col-12 mb-3">
-            <input id="product-search" type="search" class="form-control"
-              placeholder="Search products..."
-              aria-label="Search products"
-              autocomplete="off">
+            <div class="input-group">
+              <input id="product-search" type="search" class="form-control"
+                placeholder="Search products..."
+                aria-label="Search products"
+                autocomplete="off">
+              <div class="input-group-append">
+                <button id="product-search-clear" class="btn btn-outline-secondary"
+                  type="button" aria-label="Clear search" style="display:none;">&#x2715;</button>
+              </div>
+            </div>
           </div>
 
           {{ range $.products }}
@@ -70,11 +76,12 @@
           <script>
             (function () {
               var input = document.getElementById('product-search');
+              var clearBtn = document.getElementById('product-search-clear');
               var cards = document.querySelectorAll('.hot-product-card');
               var noResults = document.getElementById('product-no-results');
 
-              input.addEventListener('input', function () {
-                var query = this.value.trim().toLowerCase();
+              function applyFilter() {
+                var query = input.value.trim().toLowerCase();
                 var visible = 0;
                 cards.forEach(function (card) {
                   var name = (card.getAttribute('data-product-name') || '').toLowerCase();
@@ -83,6 +90,15 @@
                   if (show) visible++;
                 });
                 noResults.style.display = (visible === 0) ? '' : 'none';
+                clearBtn.style.display = input.value ? '' : 'none';
+              }
+
+              input.addEventListener('input', applyFilter);
+
+              clearBtn.addEventListener('click', function () {
+                input.value = '';
+                applyFilter();
+                input.focus();
               });
             })();
           </script>
