@@ -17,13 +17,14 @@ A customer lands on the homepage, types a word into a search box, and sees only 
 
 **Why this priority**: This is the core interaction. Without it, there is no feature.
 
-**Independent Test**: Type "shirt" into the search box. Only products with "shirt" in the name appear. The result cards look identical to the default product cards.
+**Independent Test**: Type "shirt" into the search box. Only products with "shirt" in the name or description appear. The result cards look identical to the default product cards.
 
 **Acceptance Scenarios**:
 
-1. **Given** the homepage is loaded with all products visible, **When** the customer types "shirt" into the search box and submits, **Then** only products with "shirt" in the name are displayed in the product grid.
+1. **Given** the homepage is loaded with all products visible, **When** the customer types "shirt" into the search box and submits (via Enter key or search button), **Then** only products with "shirt" in the name or description are displayed in the product grid.
 2. **Given** the customer has typed a query, **When** the results render, **Then** each result uses the same product card layout (image, name, price) as the default homepage listing.
 3. **Given** the customer has typed a query, **When** results render, **Then** results appear within 500ms for the existing catalogue size (under 100 items).
+4. **Given** the customer has selected a non-default currency (e.g. EUR), **When** they search for a product, **Then** search results display prices in the selected currency, not USD.
 
 ---
 
@@ -63,13 +64,14 @@ After searching, the customer wants to go back to seeing all products. They clea
 - **Very long query (500+ characters)**: The search handles it gracefully — returns no results, does not error or crash.
 - **Special characters in query** (`<script>`, `"`, `'`, `&`): The search handles them safely — no XSS, no server errors. Results simply show no matches if none exist.
 - **Case insensitivity**: Searching "SHIRT", "Shirt", and "shirt" all return the same results.
+- **Single-character query**: Allowed; returns all matching products. No minimum query length enforced.
 
 ## Requirements
 
 ### Functional Requirements
 
-- **FR-001**: The homepage MUST display a search input field visible above the product grid.
-- **FR-002**: When a customer submits a non-empty query, the frontend MUST call the existing `SearchProducts` RPC on `productcatalogservice` with the query string.
+- **FR-001**: The homepage MUST display a search input field visible above the product grid. The search MUST support submission via Enter key. A visible search button is optional.
+- **FR-002**: When a customer submits a non-empty query, the frontend MUST call the existing `SearchProducts` RPC on `productcatalogservice` with the query string. The search MUST use an HTTP GET with a query parameter (e.g. `?q=shirt`) so results are bookmarkable and back-button friendly.
 - **FR-003**: The frontend MUST display only the products returned by `SearchProducts`, using the same product card layout as the default listing.
 - **FR-004**: When `SearchProducts` returns zero results, the frontend MUST display a "no products found" message instead of product cards.
 - **FR-005**: When a customer submits an empty or whitespace-only query, the frontend MUST display all products (equivalent to `ListProducts`).
