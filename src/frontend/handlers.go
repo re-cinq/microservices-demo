@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"html/template"
 	"io"
 	"math/rand"
@@ -50,11 +51,39 @@ var (
 				Funcs(template.FuncMap{
 			"renderMoney":        renderMoney,
 			"renderCurrencyLogo": renderCurrencyLogo,
+			"highlightTerm":      highlightTerm,
 		}).ParseGlob("templates/*.html"))
 	plat platformDetails
 )
 
 var validEnvs = []string{"local", "gcp", "azure", "aws", "onprem", "alibaba"}
+
+// highlightTerm wraps every case-insensitive occurrence of term inside text
+// with <mark> tags. Both inputs are HTML-escaped before processing so the
+// output is safe to use as template.HTML even when term contains special chars.
+func highlightTerm(term, text string) template.HTML {
+	escaped := html.EscapeString(text)
+	if term == "" {
+		return template.HTML(escaped)
+	}
+	escapedTerm := html.EscapeString(term)
+	lowerText := strings.ToLower(escaped)
+	lowerTerm := strings.ToLower(escapedTerm)
+	var out strings.Builder
+	for i := 0; i < len(escaped); {
+		idx := strings.Index(lowerText[i:], lowerTerm)
+		if idx == -1 {
+			out.WriteString(escaped[i:])
+			break
+		}
+		out.WriteString(escaped[i : i+idx])
+		out.WriteString("<mark>")
+		out.WriteString(escaped[i+idx : i+idx+len(lowerTerm)])
+		out.WriteString("</mark>")
+		i += idx + len(lowerTerm)
+	}
+	return template.HTML(out.String())
+}
 
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
@@ -64,11 +93,29 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve currencies"), http.StatusInternalServerError)
 		return
 	}
-	products, err := fe.getProducts(r.Context())
+	q := r.URL.Query().Get("q")
+	trimmed := strings.TrimSpace(q)
+
+	var (
+		products    []*pb.Product
+		searchError string
+		isSearch    bool
+	)
+	switch {
+	case q == "":
+		products, err = fe.getProducts(r.Context())
+	case len([]rune(trimmed)) < 2:
+		searchError = "Please enter at least 2 characters to search."
+		products, err = fe.getProducts(r.Context())
+	default:
+		isSearch = true
+		products, err = fe.searchProducts(r.Context(), trimmed)
+	}
 	if err != nil {
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve products"), http.StatusInternalServerError)
 		return
 	}
+
 	cart, err := fe.getCart(r.Context(), sessionID(r))
 	if err != nil {
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve cart"), http.StatusInternalServerError)
@@ -114,6 +161,9 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"cart_size":     cartSize(cart),
 		"banner_color":  os.Getenv("BANNER_COLOR"), // illustrates canary deployments
 		"ad":            fe.chooseAd(r.Context(), []string{}, log),
+		"search_query":  q,
+		"search_error":  searchError,
+		"is_search":     isSearch,
 	})); err != nil {
 		log.Error(err)
 	}

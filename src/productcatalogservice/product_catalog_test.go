@@ -51,6 +51,13 @@ func TestMain(m *testing.M) {
 		Id:   "abc004",
 		Name: "Product Gamma",
 	})
+	// Product whose unique keyword ("zephyr") appears only in description, not name.
+	// Used by TestSearchProductsByDescription to verify description-field matching.
+	mockProductCatalog.catalog.Products = append(mockProductCatalog.catalog.Products, &pb.Product{
+		Id:          "abc005",
+		Name:        "Product Epsilon",
+		Description: "A product containing the word zephyr in its description only.",
+	})
 
 	os.Exit(m.Run())
 }
@@ -83,8 +90,25 @@ func TestListProducts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(products.Products), 4; got != want {
+	if got, want := len(products.Products), 5; got != want {
 		t.Errorf("got %d, want %d", got, want)
+	}
+}
+
+func TestSearchProductsByDescription(t *testing.T) {
+	// "zephyr" exists only in abc005's Description, not in any product Name.
+	// SearchProducts must return exactly that product.
+	products, err := mockProductCatalog.SearchProducts(context.Background(),
+		&pb.SearchProductsRequest{Query: "zephyr"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := len(products.Results), 1; got != want {
+		t.Fatalf("got %d results, want %d", got, want)
+	}
+	if got, want := products.Results[0].Id, "abc005"; got != want {
+		t.Errorf("got product id %s, want %s", got, want)
 	}
 }
 
