@@ -37,6 +37,13 @@
 
       <div class="col-12 col-lg-12 px-10-percent">
 
+        <div class="search-wrapper">
+          <input type="text" id="search-input" name="search" autocomplete="off" placeholder="Search products" aria-label="Search products">
+          <button type="button" id="search-clear" class="search-clear" aria-label="Clear search" hidden>&times;</button>
+        </div>
+
+        <div id="search-empty-state" class="search-empty-state" role="status" aria-live="polite" hidden>No products match your search.</div>
+
         <div class="row hot-products-row px-xl-6">
 
           <div class="col-12">
@@ -44,7 +51,7 @@
           </div>
 
           {{ range $.products }}
-          <div class="col-md-4 hot-product-card">
+          <div class="col-md-4 hot-product-card" data-product-name="{{ .Item.Name }}">
             <a href="{{ $.baseUrl }}/product/{{.Item.Id}}">
               <img loading="lazy" src="{{ $.baseUrl }}{{.Item.Picture}}">
               <div class="hot-product-card-img-overlay"></div>
@@ -76,5 +83,7 @@
 <div class="d-lg-none">
   {{ template "footer" . }}
 </div>
+
+<script src="{{ $.baseUrl }}/static/js/search.js" defer></script>
 
 {{ end }}
