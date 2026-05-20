@@ -383,6 +383,9 @@ main {
   position: relative;
   display: inline-block;
   width: 1em;
+  height: 1em;
+  line-height: 1;
+  vertical-align: text-top;
 }
 
 .hot-product-card-rating .star-half-fill {
@@ -395,6 +398,9 @@ main {
 }
 
 .hot-product-card-rating .star-half-empty {
+  position: absolute;
+  left: 0;
+  top: 0;
   color: #d0d0d0;
 }
 
