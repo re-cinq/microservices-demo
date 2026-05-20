@@ -42,6 +42,13 @@ type platformDetails struct {
 	provider string
 }
 
+type WishlistItem struct {
+	ProductID string
+	Name      string
+	Picture   string
+	Price     pb.Money
+}
+
 var (
 	frontendMessage  = strings.TrimSpace(os.Getenv("FRONTEND_MESSAGE"))
 	isCymbalBrand    = "true" == strings.ToLower(os.Getenv("CYMBAL_BRANDING"))
@@ -203,6 +210,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"recommendations": recommendations,
 		"cart_size":       cartSize(cart),
 		"packagingInfo":   packagingInfo,
+		"saved":           r.URL.Query().Get("saved") == "1",
 	})); err != nil {
 		log.Println(err)
 	}
@@ -632,4 +640,61 @@ func stringinSlice(slice []string, val string) bool {
 		}
 	}
 	return false
+}
+
+func (fe *frontendServer) saveWishlistHandler(w http.ResponseWriter, r *http.Request) {
+	productID := r.FormValue("product_id")
+	if productID == "" {
+		http.Error(w, "product_id is required", http.StatusBadRequest)
+		return
+	}
+	sid := sessionID(r)
+
+	var ids []string
+	if v, ok := fe.wishlists.Load(sid); ok {
+		ids = v.([]string)
+	}
+	if !stringinSlice(ids, productID) {
+		ids = append(ids, productID)
+		fe.wishlists.Store(sid, ids)
+	}
+
+	http.Redirect(w, r, "/product/"+productID+"?saved=1", http.StatusSeeOther)
+}
+
+func (fe *frontendServer) viewWishlistHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	sid := sessionID(r)
+
+	var ids []string
+	if v, ok := fe.wishlists.Load(sid); ok {
+		ids = v.([]string)
+	}
+
+	items := make([]WishlistItem, 0, len(ids))
+	for _, id := range ids {
+		p, err := fe.getProduct(r.Context(), id)
+		if err != nil {
+			log.WithField("product_id", id).WithField("error", err).Warn("could not retrieve wishlist product")
+			continue
+		}
+		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+		if err != nil {
+			log.WithField("product_id", id).WithField("error", err).Warn("could not convert wishlist product price")
+			continue
+		}
+		items = append(items, WishlistItem{
+			ProductID: id,
+			Name:      p.GetName(),
+			Picture:   p.GetPicture(),
+			Price:     *price,
+		})
+	}
+
+	if err := templates.ExecuteTemplate(w, "wishlist", injectCommonTemplateData(r, map[string]interface{}{
+		"items":         items,
+		"show_currency": true,
+	})); err != nil {
+		log.Println(err)
+	}
 }

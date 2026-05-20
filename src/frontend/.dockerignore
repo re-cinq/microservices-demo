@@ -1,1 +1,4 @@
 vendor/
+*.exe
+*.test
+*.out

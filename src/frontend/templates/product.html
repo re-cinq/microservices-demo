@@ -68,6 +68,15 @@
             </div>
             <button type="submit" class="cymbal-button-primary">Add To Cart</button>
           </form>
+          <form method="POST" action="{{ $.baseUrl }}/wishlist/save" style="margin-top:0.5rem;">
+            <input type="hidden" name="product_id" value="{{$.product.Item.Id}}" />
+            <button type="submit" class="cymbal-button-secondary">Save for later</button>
+          </form>
+          {{ if $.saved }}
+          <div class="alert alert-success" role="alert" style="margin-top:0.75rem;">
+            Saved to your wishlist.
+          </div>
+          {{ end }}
         </div>
       </div>
     </div>

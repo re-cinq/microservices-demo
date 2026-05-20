@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -86,6 +87,8 @@ type frontendServer struct {
 	collectorConn *grpc.ClientConn
 
 	shoppingAssistantSvcAddr string
+
+	wishlists sync.Map // keyed by session ID (string) → []string of product IDs
 }
 
 func main() {
@@ -161,6 +164,8 @@ func main() {
 	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
 	r.HandleFunc(baseUrl+"/product-meta/{ids}", svc.getProductByID).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/bot", svc.chatBotHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/wishlist", svc.viewWishlistHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(baseUrl+"/wishlist/save", svc.saveWishlistHandler).Methods(http.MethodPost)
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler}     // add logging
