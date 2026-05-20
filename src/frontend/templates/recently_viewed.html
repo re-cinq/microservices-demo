@@ -1,0 +1,28 @@
+{{ define "recently_viewed" }}
+<section class="recently-viewed">
+  <div class="container">
+    <div class="row">
+      <div class="col-xl-10 offset-xl-1">
+        <h2>Recently Viewed</h2>
+        <div class="row">
+          {{ range .recently_viewed }}
+          <div class="col-md-3">
+            <div>
+              <a href="{{ $.baseUrl }}/product/{{ .Item.Id }}">
+                <img alt="{{ .Item.Name }}" src="{{ $.baseUrl }}{{ .Item.Picture }}">
+              </a>
+              <div>
+                <h5>
+                  <a href="{{ $.baseUrl }}/product/{{ .Item.Id }}">{{ .Item.Name }}</a>
+                </h5>
+                <p>{{ renderMoney .Price }}</p>
+              </div>
+            </div>
+          </div>
+          {{ end }}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{{ end }}
