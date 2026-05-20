@@ -32,8 +32,8 @@
         <div class="product-wrapper">
 
           <h2>{{ $.product.Item.Name }}</h2>
-          {{ if gt $.product.Item.Rating 0.0 }}
-          <p class="product-rating">&#9733; {{ $.product.Item.Rating }} / 5</p>
+          {{ with productRating $.product.Item.Categories }}
+          <p class="product-rating">&#9733; {{ . }} / 5</p>
           {{ end }}
           <p class="product-price">{{ renderMoney $.product.Price }}</p>
           <p>{{ $.product.Item.Description }}</p>

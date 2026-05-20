@@ -50,6 +50,7 @@ var (
 				Funcs(template.FuncMap{
 			"renderMoney":        renderMoney,
 			"renderCurrencyLogo": renderCurrencyLogo,
+			"productRating":      productRating,
 		}).ParseGlob("templates/*.html"))
 	plat platformDetails
 )
@@ -601,6 +602,18 @@ func cartSize(c []*pb.CartItem) int {
 		cartSize += int(item.GetQuantity())
 	}
 	return cartSize
+}
+
+// productRating extracts the star rating injected by productcatalogservice as a
+// "__rating__:X.X" token in the product's categories list.  Returns the
+// formatted rating string (e.g. "4.3") or an empty string when absent.
+func productRating(categories []string) string {
+	for _, c := range categories {
+		if strings.HasPrefix(c, "__rating__:") {
+			return strings.TrimPrefix(c, "__rating__:")
+		}
+	}
+	return ""
 }
 
 func renderMoney(money pb.Money) string {

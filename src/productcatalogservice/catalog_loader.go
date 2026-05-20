@@ -17,6 +17,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -50,9 +51,37 @@ func loadCatalogFromLocalFile(catalog *pb.ListProductsResponse) error {
 		return err
 	}
 
-	if err := jsonpb.Unmarshal(bytes.NewReader(catalogJSON), catalog); err != nil {
+	// Use AllowUnknownFields so extra fields (e.g. "rating") don't cause a parse error.
+	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
+	if err := unmarshaler.Unmarshal(bytes.NewReader(catalogJSON), catalog); err != nil {
 		log.Warnf("failed to parse the catalog JSON: %v", err)
 		return err
+	}
+
+	// Second pass: extract "rating" values via standard JSON and carry them
+	// as a "__rating__:X.X" token in each product's categories list.
+	// This lets the rating travel over the existing gRPC Product message
+	// without requiring a proto schema change.
+	type productRaw struct {
+		ID     string  `json:"id"`
+		Rating float32 `json:"rating"`
+	}
+	type catalogRaw struct {
+		Products []productRaw `json:"products"`
+	}
+	var raw catalogRaw
+	if err := json.Unmarshal(catalogJSON, &raw); err == nil {
+		ratingByID := make(map[string]float32, len(raw.Products))
+		for _, p := range raw.Products {
+			if p.Rating > 0 {
+				ratingByID[p.ID] = p.Rating
+			}
+		}
+		for _, p := range catalog.Products {
+			if r, ok := ratingByID[p.Id]; ok {
+				p.Categories = append(p.Categories, fmt.Sprintf("__rating__:%.1f", r))
+			}
+		}
 	}
 
 	log.Info("successfully parsed product catalog json")
