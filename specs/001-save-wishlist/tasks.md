@@ -19,7 +19,7 @@
 
 **Purpose**: Add the in-memory wishlist store to the existing server struct — the single prerequisite all story tasks share.
 
-- [ ] T001 Add `wishlists sync.Map` field to `frontendServer` struct in `src/frontend/main.go`
+- [x] T001 Add `wishlists sync.Map` field to `frontendServer` struct in `src/frontend/main.go`
 
 **Checkpoint**: `frontendServer` has a `wishlists` field of type `sync.Map`. Compiles cleanly with `go build ./...`.
 
@@ -31,7 +31,7 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T002 Define `WishlistItem` struct (fields: `ProductID`, `Name`, `Picture`, `Price pb.Money`) in `src/frontend/handlers.go`
+- [x] T002 Define `WishlistItem` struct (fields: `ProductID`, `Name`, `Picture`, `Price pb.Money`) in `src/frontend/handlers.go`
 
 **Checkpoint**: `WishlistItem` struct is defined and compiles. No handler logic yet.
 
@@ -45,9 +45,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T003 [US1] Implement `saveWishlistHandler` in `src/frontend/handlers.go`: read `product_id` from POST body, load session's product-ID slice from `fe.wishlists`, append if not present, store back, redirect to `/product/{product_id}?saved=1`. Return 400 if `product_id` is empty.
-- [ ] T004 [P] [US1] Register `POST /wishlist/save` route pointing to `saveWishlistHandler` in `src/frontend/main.go` (parallel with T005 — different file)
-- [ ] T005 [P] [US1] Add "Save for later" `<form method="POST" action="...">` button and conditional `{{ if $.saved }}` inline confirmation banner to `src/frontend/templates/product.html`; update `productHandler` in `src/frontend/handlers.go` to read `r.URL.Query().Get("saved")` and pass `"saved": true/false` into the template data map
+- [x] T003 [US1] Implement `saveWishlistHandler` in `src/frontend/handlers.go`: read `product_id` from POST body, load session's product-ID slice from `fe.wishlists`, append if not present, store back, redirect to `/product/{product_id}?saved=1`. Return 400 if `product_id` is empty.
+- [x] T004 [P] [US1] Register `POST /wishlist/save` route pointing to `saveWishlistHandler` in `src/frontend/main.go` (parallel with T005 — different file)
+- [x] T005 [P] [US1] Add "Save for later" `<form method="POST" action="...">` button and conditional `{{ if $.saved }}` inline confirmation banner to `src/frontend/templates/product.html`; update `productHandler` in `src/frontend/handlers.go` to read `r.URL.Query().Get("saved")` and pass `"saved": true/false` into the template data map
 
 **Checkpoint**: `POST /wishlist/save` with a valid `product_id` redirects to the product page showing the confirmation banner. Saving the same product twice does not duplicate it.
 
@@ -61,10 +61,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T006 [US2] Implement `viewWishlistHandler` in `src/frontend/handlers.go`: load saved product IDs from `fe.wishlists` for the session, fetch each product via `fe.getProduct`, convert price via `fe.convertCurrency`, build `[]WishlistItem`, render `wishlist.html`
-- [ ] T007 [P] [US2] Register `GET /wishlist` route pointing to `viewWishlistHandler` in `src/frontend/main.go`
-- [ ] T008 [P] [US2] Create `src/frontend/templates/wishlist.html`: extends header/footer, renders product cards (name, image, price) for each item in `$.items`; shows empty-state message when `$.items` is empty
-- [ ] T009 [P] [US2] Add wishlist icon nav link to `src/frontend/templates/header.html` next to the existing cart link, following the same `<a href="{{ $.baseUrl }}/wishlist" class="cart-link">` pattern
+- [x] T006 [US2] Implement `viewWishlistHandler` in `src/frontend/handlers.go`: load saved product IDs from `fe.wishlists` for the session, fetch each product via `fe.getProduct`, convert price via `fe.convertCurrency`, build `[]WishlistItem`, render `wishlist.html`
+- [x] T007 [P] [US2] Register `GET /wishlist` route pointing to `viewWishlistHandler` in `src/frontend/main.go`
+- [x] T008 [P] [US2] Create `src/frontend/templates/wishlist.html`: extends header/footer, renders product cards (name, image, price) for each item in `$.items`; shows empty-state message when `$.items` is empty
+- [x] T009 [P] [US2] Add wishlist icon nav link to `src/frontend/templates/header.html` next to the existing cart link, following the same `<a href="{{ $.baseUrl }}/wishlist" class="cart-link">` pattern
 
 **Checkpoint**: `/wishlist` renders saved products with name, image, and price. Navigating to `/wishlist` with no saved items shows the empty-state message. Header shows the wishlist icon on every page.
 
@@ -78,7 +78,7 @@
 
 ### Verification for User Story 3
 
-- [ ] T010 [US3] Verify session-scoped clearing manually per `specs/001-save-wishlist/quickstart.md` steps (incognito window test) and confirm the behaviour matches AC in spec.md; update quickstart.md with explicit session-clearing verification step if not already present
+- [x] T010 [US3] Verify session-scoped clearing manually per `specs/001-save-wishlist/quickstart.md` steps (incognito window test) and confirm the behaviour matches AC in spec.md; update quickstart.md with explicit session-clearing verification step if not already present
 
 **Checkpoint**: New session always starts with an empty wishlist. No data persists across sessions.
 
@@ -88,8 +88,8 @@
 
 **Purpose**: Unit tests, compilation verification, code quality.
 
-- [ ] T011 [P] Create `src/frontend/wishlist_test.go` with unit tests for: `saveWishlistHandler` adds product, prevents duplicate, rejects empty `product_id`; `viewWishlistHandler` returns empty slice when no products saved
-- [ ] T012 [P] Run `go build ./...` and `go vet ./...` from `src/frontend/` and confirm both pass with no errors or warnings
+- [x] T011 [P] Create `src/frontend/wishlist_test.go` with unit tests for: `saveWishlistHandler` adds product, prevents duplicate, rejects empty `product_id`; `viewWishlistHandler` returns empty slice when no products saved
+- [x] T012 [P] Run `go build ./...` and `go vet ./...` from `src/frontend/` and confirm both pass with no errors or warnings
 
 ---
 

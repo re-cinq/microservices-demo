@@ -19,7 +19,15 @@ Once the frontend is running:
 1. Open any product page, e.g. `http://localhost:8080/product/<id>`
 2. Click **Save for later** — you should see the inline confirmation banner appear on the same page.
 3. Navigate to `http://localhost:8080/wishlist` — the saved product should appear with its name, image, and price.
-4. Open a new browser session (incognito window or clear cookies) and navigate to `http://localhost:8080/wishlist` — the list should be empty.
+4. Navigate to `http://localhost:8080/wishlist` without having saved anything — you should see the empty-state message.
+5. Save a product twice — navigate to `/wishlist` and confirm the product appears only once (no duplicate).
+
+### Session-clearing verification (US3)
+
+6. Save one or more products in your current browser session.
+7. Open a new incognito / private window (this starts a fresh session with no `shop_session-id` cookie).
+8. Navigate to `http://localhost:8080/wishlist` in the incognito window — the list must be **empty**.
+9. Confirm that the original window still shows your saved products (sessions are independent).
 
 ## Running unit tests
 
