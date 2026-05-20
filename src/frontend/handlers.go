@@ -107,18 +107,12 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	plat = platformDetails{}
 	plat.setPlatformDetails(strings.ToLower(env))
 
-	var recentlyViewed []productView
+	var recentlyViewed []*pb.Product
 	if rvIDs := recentlyViewedFromCookie(r); len(rvIDs) > 0 {
-		rvProducts, err := fe.getRecentlyViewedProducts(r.Context(), rvIDs)
+		recentlyViewed, err = fe.getRecentlyViewedProducts(r.Context(), rvIDs)
 		if err != nil {
 			log.WithField("error", err).Warn("could not retrieve recently viewed products for home page")
-		} else {
-			for _, p := range rvProducts {
-				price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
-				if err == nil {
-					recentlyViewed = append(recentlyViewed, productView{p, price})
-				}
-			}
+			recentlyViewed = nil
 		}
 	}
 
