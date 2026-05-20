@@ -35,11 +35,18 @@ import (
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
 	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/money"
 	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/validator"
+	"google.golang.org/grpc/metadata"
 )
 
 type platformDetails struct {
 	css      string
 	provider string
+}
+
+// promoCodes maps discount code → percentage off. Must match checkoutservice.
+var promoCodes = map[string]int32{
+	"SAVE10":  10,
+	"PROMO20": 20,
 }
 
 var (
@@ -249,6 +256,47 @@ func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusFound)
 }
 
+func applyPromoDiscount(m pb.Money, pct int32) pb.Money {
+	totalNanos := m.Units*1_000_000_000 + int64(m.Nanos)
+	discountedNanos := totalNanos * int64(100-pct) / 100
+	savingsNanos := totalNanos - discountedNanos
+	_ = savingsNanos
+	return pb.Money{
+		CurrencyCode: m.CurrencyCode,
+		Units:        discountedNanos / 1_000_000_000,
+		Nanos:        int32(discountedNanos % 1_000_000_000),
+	}
+}
+
+func promoSavings(m pb.Money, pct int32) pb.Money {
+	totalNanos := m.Units*1_000_000_000 + int64(m.Nanos)
+	savingsNanos := totalNanos * int64(pct) / 100
+	return pb.Money{
+		CurrencyCode: m.CurrencyCode,
+		Units:        savingsNanos / 1_000_000_000,
+		Nanos:        int32(savingsNanos % 1_000_000_000),
+	}
+}
+
+func (fe *frontendServer) applyPromoHandler(w http.ResponseWriter, r *http.Request) {
+	code := strings.TrimSpace(r.FormValue("promo_code"))
+	if _, ok := promoCodes[code]; ok {
+		http.SetCookie(w, &http.Cookie{
+			Name:   cookiePromoCode,
+			Value:  code,
+			MaxAge: cookieMaxAge,
+		})
+	} else {
+		http.SetCookie(w, &http.Cookie{
+			Name:   cookiePromoCode,
+			Value:  "",
+			MaxAge: -1,
+		})
+	}
+	w.Header().Set("location", baseUrl+"/cart")
+	w.WriteHeader(http.StatusFound)
+}
+
 func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.Debug("view user cart")
@@ -304,7 +352,7 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 	totalPrice = money.Must(money.Sum(totalPrice, *shippingCost))
 	year := time.Now().Year()
 
-	if err := templates.ExecuteTemplate(w, "cart", injectCommonTemplateData(r, map[string]interface{}{
+	templateData := map[string]interface{}{
 		"currencies":       currencies,
 		"recommendations":  recommendations,
 		"cart_size":        cartSize(cart),
@@ -313,7 +361,18 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 		"total_cost":       totalPrice,
 		"items":            items,
 		"expiration_years": []int{year, year + 1, year + 2, year + 3, year + 4},
-	})); err != nil {
+	}
+	if c, err := r.Cookie(cookiePromoCode); err == nil && c.Value != "" {
+		if pct, ok := promoCodes[c.Value]; ok {
+			savings := promoSavings(totalPrice, pct)
+			templateData["total_cost"] = applyPromoDiscount(totalPrice, pct)
+			templateData["promo_applied"] = true
+			templateData["promo_code"] = c.Value
+			templateData["promo_savings"] = savings
+		}
+	}
+
+	if err := templates.ExecuteTemplate(w, "cart", injectCommonTemplateData(r, templateData)); err != nil {
 		log.Println(err)
 	}
 }
@@ -352,8 +411,16 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	checkoutCtx := r.Context()
+	if c, err := r.Cookie(cookiePromoCode); err == nil && c.Value != "" {
+		if _, ok := promoCodes[c.Value]; ok {
+			md := metadata.Pairs("promo-code", c.Value)
+			checkoutCtx = metadata.NewOutgoingContext(checkoutCtx, md)
+		}
+	}
+
 	order, err := pb.NewCheckoutServiceClient(fe.checkoutSvcConn).
-		PlaceOrder(r.Context(), &pb.PlaceOrderRequest{
+		PlaceOrder(checkoutCtx, &pb.PlaceOrderRequest{
 			Email: payload.Email,
 			CreditCard: &pb.CreditCardInfo{
 				CreditCardNumber:          payload.CcNumber,
@@ -374,6 +441,8 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	log.WithField("order", order.GetOrder().GetOrderId()).Info("order placed")
+
+	http.SetCookie(w, &http.Cookie{Name: cookiePromoCode, Value: "", MaxAge: -1})
 
 	order.GetOrder().GetItems()
 	recommendations, _ := fe.getRecommendations(r.Context(), sessionID(r), nil)
