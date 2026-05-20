@@ -64,6 +64,21 @@ var (
 
 var validEnvs = []string{"local", "gcp", "azure", "aws", "onprem", "alibaba"}
 
+// productRatings mirrors the rating values in productcatalogservice/products.json.
+// The proto binary descriptor is not regenerated in this branch, so the Rating field
+// is never serialised over gRPC; we populate it on the view struct from this map instead.
+var productRatings = map[string]float32{
+	"OLJCESPC7Z": 4.5, // Sunglasses
+	"66VCHSJNUP": 3.5, // Tank Top
+	"1YMWWN1N4O": 4.0, // Watch
+	"L9ECAV7KIM": 4.0, // Loafers
+	"2ZYFJ3GM2N": 3.0, // Hairdryer
+	"0PUK6V6EV0": 4.5, // Candle Holder
+	"LS4PSXUNUM": 3.5, // Salt & Pepper Shakers
+	"9SIQT8TOJO": 5.0, // Bamboo Glass Jar
+	"6E92ZMYYFZ": 2.5, // Mug
+}
+
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.WithField("currency", currentCurrency(r)).Info("home")
@@ -84,8 +99,9 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type productView struct {
-		Item  *pb.Product
-		Price *pb.Money
+		Item   *pb.Product
+		Price  *pb.Money
+		Rating float32
 	}
 	ps := make([]productView, len(products))
 	for i, p := range products {
@@ -94,7 +110,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 			renderHTTPError(log, r, w, errors.Wrapf(err, "failed to do currency conversion for product %s", p.GetId()), http.StatusInternalServerError)
 			return
 		}
-		ps[i] = productView{p, price}
+		ps[i] = productView{p, price, productRatings[p.GetId()]}
 	}
 
 	// Set ENV_PLATFORM (default to local if not set; use env var if set; otherwise detect GCP, which overrides env)_
@@ -189,9 +205,10 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	product := struct {
-		Item  *pb.Product
-		Price *pb.Money
-	}{p, price}
+		Item   *pb.Product
+		Price  *pb.Money
+		Rating float32
+	}{p, price, productRatings[p.GetId()]}
 
 	// Fetch packaging info (weight/dimensions) of the product
 	// The packaging service is an optional microservice you can run as part of a Google Cloud demo.

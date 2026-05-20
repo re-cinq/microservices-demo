@@ -52,7 +52,7 @@
             <div>
               <div class="hot-product-card-name">{{ .Item.Name }}</div>
               <div class="hot-product-card-price">{{ renderMoney .Price }}</div>
-              {{ renderStars .Item.Rating }}
+              {{ renderStars .Rating }}
             </div>
           </div>
           {{ end }}
