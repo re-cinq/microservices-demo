@@ -90,8 +90,36 @@
                         <div class="col pr-md-0 text-right">{{ renderMoney .shipping_cost }}</div>
                     </div>
 
+                    <div class="row my-2">
+                        <div class="col pl-md-0">
+                            <form method="POST" action="{{ $.baseUrl }}/cart/promo" class="d-flex">
+                                <input type="text" name="promo_code" placeholder="Promo code"
+                                    value="{{ if $.promo_applied }}{{ $.promo_code }}{{ end }}"
+                                    class="form-control form-control-sm mr-2" style="max-width:160px;">
+                                <button type="submit" class="cymbal-button-secondary btn-sm">Apply</button>
+                            </form>
+                            {{ if $.promo_applied }}
+                            <small class="text-success mt-1 d-block">
+                                Code <strong>{{ $.promo_code }}</strong> applied — {{ renderMoney $.promo_savings }} off
+                            </small>
+                            {{ end }}
+                            {{ if $.promo_error }}
+                            <small class="text-danger mt-1 d-block">
+                                Promo code not recognised — please check the code and try again.
+                            </small>
+                            {{ end }}
+                        </div>
+                    </div>
+
+                    {{ if $.promo_applied }}
+                    <div class="row cart-summary-shipping-row">
+                        <div class="col pl-md-0">Discount ({{ $.promo_code }})</div>
+                        <div class="col pr-md-0 text-right text-success">-{{ renderMoney $.promo_savings }}</div>
+                    </div>
+                    {{ end }}
+
                     <div class="row cart-summary-total-row">
-                        <div class="col pl-md-0">Total</div>
+                        <div class="col pl-md-0">Total{{ if $.promo_applied }} (after discount){{ end }}</div>
                         <div class="col pr-md-0 text-right">{{ renderMoney .total_cost }}</div>
                     </div>
 

@@ -29,6 +29,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/genproto"
@@ -46,6 +47,22 @@ const (
 	listenPort  = "5050"
 	usdCurrency = "USD"
 )
+
+// promoCodes maps discount code → percentage off (integer, e.g. 10 = 10% off).
+var promoCodes = map[string]int32{
+	"SAVE10":  10,
+	"PROMO20": 20,
+}
+
+func applyPromoDiscount(m pb.Money, pct int32) pb.Money {
+	totalNanos := m.Units*1_000_000_000 + int64(m.Nanos)
+	discountedNanos := totalNanos * int64(100-pct) / 100
+	return pb.Money{
+		CurrencyCode: m.CurrencyCode,
+		Units:        discountedNanos / 1_000_000_000,
+		Nanos:        int32(discountedNanos % 1_000_000_000),
+	}
+}
 
 var log *logrus.Logger
 
@@ -247,6 +264,15 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 	for _, it := range prep.orderItems {
 		multPrice := money.MultiplySlow(*it.Cost, uint32(it.GetItem().GetQuantity()))
 		total = money.Must(money.Sum(total, multPrice))
+	}
+
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if codes := md.Get("promo-code"); len(codes) > 0 {
+			if pct, valid := promoCodes[codes[0]]; valid {
+				log.Infof("applying promo code %q (%d%% off)", codes[0], pct)
+				total = applyPromoDiscount(total, pct)
+			}
+		}
 	}
 
 	txID, err := cs.chargeCard(ctx, &total, req.CreditCard)
