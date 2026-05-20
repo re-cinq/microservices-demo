@@ -349,6 +349,41 @@ main {
   font-size: 14px;
 }
 
+.hot-product-card-rating {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 1px;
+  color: #f5a623;
+}
+
+.hot-product-card-rating .star {
+  display: inline-block;
+}
+
+.hot-product-card-rating .star-empty {
+  color: #d0d0d0;
+}
+
+.hot-product-card-rating .star-half {
+  position: relative;
+  display: inline-block;
+  width: 1em;
+}
+
+.hot-product-card-rating .star-half-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50%;
+  overflow: hidden;
+  color: #f5a623;
+}
+
+.hot-product-card-rating .star-half-empty {
+  color: #d0d0d0;
+}
+
 .hot-product-card > a:first-child {
   position: relative;
   display: block;

@@ -99,3 +99,35 @@ func TestSearchProducts(t *testing.T) {
 		t.Errorf("got %d, want %d", got, want)
 	}
 }
+
+// TestListProductsReturnsRating loads the real products.json from disk via the
+// production loader and asserts that every product's Rating is within the legal
+// range [0.0, 5.0] on a 0.5 increment, and that at least one product is rated
+// 5.0 (matching the seeding distribution recorded in the feature's data-model).
+func TestListProductsReturnsRating(t *testing.T) {
+	fresh := &productCatalog{}
+	resp, err := fresh.ListProducts(context.Background(), &pb.Empty{})
+	if err != nil {
+		t.Fatalf("ListProducts failed: %v", err)
+	}
+	if len(resp.GetProducts()) == 0 {
+		t.Fatal("no products loaded from products.json")
+	}
+
+	foundFive := false
+	for _, p := range resp.GetProducts() {
+		r := p.GetRating()
+		if r < 0 || r > 5 {
+			t.Errorf("product %s: rating %v out of range [0.0, 5.0]", p.GetId(), r)
+		}
+		if r*2 != float32(int32(r*2)) {
+			t.Errorf("product %s: rating %v not on a 0.5 increment", p.GetId(), r)
+		}
+		if r == 5.0 {
+			foundFive = true
+		}
+	}
+	if !foundFive {
+		t.Error("expected at least one product with rating 5.0 (per data-model seeding distribution); found none")
+	}
+}

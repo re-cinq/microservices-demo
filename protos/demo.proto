@@ -84,6 +84,9 @@ message Product {
     // Categories such as "clothing" or "kitchen" that can be used to look up
     // other related products.
     repeated string categories = 6;
+
+    // 0.0 means "no rating"; otherwise 0.5..5.0 in 0.5 steps.
+    float rating = 7;
 }
 
 message ListProductsResponse {

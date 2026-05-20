@@ -50,6 +50,7 @@ var (
 				Funcs(template.FuncMap{
 			"renderMoney":        renderMoney,
 			"renderCurrencyLogo": renderCurrencyLogo,
+			"renderStars":        renderStars,
 		}).ParseGlob("templates/*.html"))
 	plat platformDetails
 )
@@ -76,8 +77,9 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type productView struct {
-		Item  *pb.Product
-		Price *pb.Money
+		Item   *pb.Product
+		Price  *pb.Money
+		Rating float32
 	}
 	ps := make([]productView, len(products))
 	for i, p := range products {
@@ -86,7 +88,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 			renderHTTPError(log, r, w, errors.Wrapf(err, "failed to do currency conversion for product %s", p.GetId()), http.StatusInternalServerError)
 			return
 		}
-		ps[i] = productView{p, price}
+		ps[i] = productView{Item: p, Price: price, Rating: p.GetRating()}
 	}
 
 	// Set ENV_PLATFORM (default to local if not set; use env var if set; otherwise detect GCP, which overrides env)_
@@ -623,6 +625,37 @@ func renderCurrencyLogo(currencyCode string) string {
 		logo = val
 	}
 	return logo
+}
+
+// renderStars returns a 5-glyph star strip for a product rating in [0.0, 5.0].
+// Whole-point values render as filled (★); the next 0.5 increment renders as a
+// half-filled overlay; the remainder renders as empty (☆). Callers must gate
+// invocation on rating > 0 — a zero value here would render an all-empty strip,
+// which the UI contract reserves for "no rating".
+func renderStars(rating float32) template.HTML {
+	if rating < 0 {
+		rating = 0
+	}
+	if rating > 5 {
+		rating = 5
+	}
+	full := int(rating)
+	half := (rating-float32(full))*2 >= 1
+	empty := 5 - full
+	if half {
+		empty--
+	}
+	var b strings.Builder
+	for i := 0; i < full; i++ {
+		b.WriteString(`<span class="star star-full">★</span>`)
+	}
+	if half {
+		b.WriteString(`<span class="star star-half"><span class="star-half-fill">★</span><span class="star-half-empty">☆</span></span>`)
+	}
+	for i := 0; i < empty; i++ {
+		b.WriteString(`<span class="star star-empty">☆</span>`)
+	}
+	return template.HTML(b.String())
 }
 
 func stringinSlice(slice []string, val string) bool {
