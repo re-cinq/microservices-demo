@@ -15,7 +15,7 @@
 
 **Purpose**: Cherry-pick the promo-code infrastructure from kate-payne's AIP-150 implementation into this branch. AIP-151 cannot be implemented without this foundation.
 
-- [ ] T001 Cherry-pick source-code files from commit `f14efd7a` (origin/attendee/kate-payne): `src/frontend/main.go`, `src/frontend/handlers.go`, `src/frontend/templates/cart.html`, `src/checkoutservice/main.go` — skip `.specify/feature.json`, `CLAUDE.md`, and `specs/002-*` artefacts
+- [x] T001 Cherry-pick source-code files from commit `f14efd7a` (origin/attendee/kate-payne): `src/frontend/main.go`, `src/frontend/handlers.go`, `src/frontend/templates/cart.html`, `src/checkoutservice/main.go` — skip `.specify/feature.json`, `CLAUDE.md`, and `specs/002-*` artefacts
 
 **Checkpoint**: `go build ./...` compiles cleanly; promo input appears on the cart page; SAVE10/PROMO20 apply a discount.
 
@@ -27,7 +27,7 @@
 
 **⚠️ CRITICAL**: Phase 3 and 4 handler changes cannot compile without this constant.
 
-- [ ] T002 Add `cookiePromoError = cookiePrefix + "promo-error"` constant in `src/frontend/main.go` (alongside `cookiePromoCode`)
+- [x] T002 Add `cookiePromoError = cookiePrefix + "promo-error"` constant in `src/frontend/main.go` (alongside `cookiePromoCode`)
 
 **Checkpoint**: Project compiles with the new constant.
 
@@ -41,9 +41,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T003 [US1] Update `applyPromoHandler` in `src/frontend/handlers.go`: normalise input with `strings.ToUpper(strings.TrimSpace(...))` before map lookup; on valid code set `cookiePromoCode` and expire `cookiePromoError`; on invalid code clear `cookiePromoCode` and set flash cookie `cookiePromoError=1` with `MaxAge: 60`
-- [ ] T004 [US1] Update `viewCartHandler` in `src/frontend/handlers.go`: after building `templateData`, read `cookiePromoError`; if present and `Value == "1"`, set `templateData["promo_error"] = true` and immediately expire the cookie with `MaxAge: -1`
-- [ ] T005 [US1] Add inline error display block in `src/frontend/templates/cart.html` immediately below the closing `</form>` tag of the promo input section: `{{ if $.promo_error }}<small class="text-danger mt-1 d-block">Promo code not recognised — please check the code and try again.</small>{{ end }}`
+- [x] T003 [US1] Update `applyPromoHandler` in `src/frontend/handlers.go`: normalise input with `strings.ToUpper(strings.TrimSpace(...))` before map lookup; on valid code set `cookiePromoCode` and expire `cookiePromoError`; on invalid code clear `cookiePromoCode` and set flash cookie `cookiePromoError=1` with `MaxAge: 60`
+- [x] T004 [US1] Update `viewCartHandler` in `src/frontend/handlers.go`: after building `templateData`, read `cookiePromoError`; if present and `Value == "1"`, set `templateData["promo_error"] = true` and immediately expire the cookie with `MaxAge: -1`
+- [x] T005 [US1] Add inline error display block in `src/frontend/templates/cart.html` immediately below the closing `</form>` tag of the promo input section: `{{ if $.promo_error }}<small class="text-danger mt-1 d-block">Promo code not recognised — please check the code and try again.</small>{{ end }}`
 
 **Checkpoint**: US1 fully functional — BADCODE shows error; SAVE10/PROMO20 show success; total unchanged on error.
 
@@ -57,8 +57,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T006 [US2] Verify T003 already clears `cookiePromoError` on the valid-code path (the `MaxAge: -1` set in the valid branch of `applyPromoHandler`); if not yet handled, add the expiry cookie to `src/frontend/handlers.go` valid path
-- [ ] T007 [P] [US2] Verify case-insensitive recovery: confirm `strings.ToUpper` in T003 means "save10" and "SAVE10" both succeed and clear any prior error — no code change needed if T003 is correct, but verify by inspection
+- [x] T006 [US2] Verify T003 already clears `cookiePromoError` on the valid-code path (the `MaxAge: -1` set in the valid branch of `applyPromoHandler`); if not yet handled, add the expiry cookie to `src/frontend/handlers.go` valid path
+- [x] T007 [P] [US2] Verify case-insensitive recovery: confirm `strings.ToUpper` in T003 means "save10" and "SAVE10" both succeed and clear any prior error — no code change needed if T003 is correct, but verify by inspection
 
 **Checkpoint**: Entering a valid code after an error shows the success confirmation with discount; error block absent.
 
@@ -72,8 +72,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T008 [US3] Add expiry of `cookiePromoError` in `placeOrderHandler` in `src/frontend/handlers.go` (alongside the existing `cookiePromoCode` expiry) to ensure the flash cookie cannot survive past order placement
-- [ ] T009 [US3] Verify `src/frontend/templates/cart.html` — the error block is conditioned on `$.promo_error` only (set from the flash cookie, one-shot) and is absent from the order confirmation template — confirm by reading `src/frontend/templates/order.html` (no change needed if confirmation template is separate)
+- [x] T008 [US3] Add expiry of `cookiePromoError` in `placeOrderHandler` in `src/frontend/handlers.go` (alongside the existing `cookiePromoCode` expiry) to ensure the flash cookie cannot survive past order placement
+- [x] T009 [US3] Verify `src/frontend/templates/cart.html` — the error block is conditioned on `$.promo_error` only (set from the flash cookie, one-shot) and is absent from the order confirmation template — confirm by reading `src/frontend/templates/order.html` (no change needed if confirmation template is separate)
 
 **Checkpoint**: Full checkout completes at original price with no error visible; confirmation page clean.
 
@@ -81,9 +81,9 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T010 [P] Run `go build ./...` in `src/frontend/` and `src/checkoutservice/` to confirm both services compile with all changes
+- [x] T010 [P] Run `go build ./...` in `src/frontend/` and `src/checkoutservice/` to confirm both services compile with all changes
 - [ ] T011 Run end-to-end walkthrough from `specs/006-promo-error-feedback/quickstart.md` against `https://nejal-patel.training.gcp.re-cinq.com`
-- [ ] T012 [P] Verify no-promo regression: add item to cart, proceed through checkout without entering any code — confirm experience is identical to pre-feature behaviour
+- [x] T012 [P] Verify no-promo regression: add item to cart, proceed through checkout without entering any code — confirm experience is identical to pre-feature behaviour
 
 ---
 

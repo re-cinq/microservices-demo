@@ -279,19 +279,13 @@ func promoSavings(m pb.Money, pct int32) pb.Money {
 }
 
 func (fe *frontendServer) applyPromoHandler(w http.ResponseWriter, r *http.Request) {
-	code := strings.TrimSpace(r.FormValue("promo_code"))
+	code := strings.ToUpper(strings.TrimSpace(r.FormValue("promo_code")))
 	if _, ok := promoCodes[code]; ok {
-		http.SetCookie(w, &http.Cookie{
-			Name:   cookiePromoCode,
-			Value:  code,
-			MaxAge: cookieMaxAge,
-		})
+		http.SetCookie(w, &http.Cookie{Name: cookiePromoCode, Value: code, MaxAge: cookieMaxAge})
+		http.SetCookie(w, &http.Cookie{Name: cookiePromoError, Value: "", MaxAge: -1})
 	} else {
-		http.SetCookie(w, &http.Cookie{
-			Name:   cookiePromoCode,
-			Value:  "",
-			MaxAge: -1,
-		})
+		http.SetCookie(w, &http.Cookie{Name: cookiePromoCode, Value: "", MaxAge: -1})
+		http.SetCookie(w, &http.Cookie{Name: cookiePromoError, Value: "1", MaxAge: 60})
 	}
 	w.Header().Set("location", baseUrl+"/cart")
 	w.WriteHeader(http.StatusFound)
@@ -372,6 +366,11 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
+	if c, err := r.Cookie(cookiePromoError); err == nil && c.Value == "1" {
+		templateData["promo_error"] = true
+		http.SetCookie(w, &http.Cookie{Name: cookiePromoError, Value: "", MaxAge: -1})
+	}
+
 	if err := templates.ExecuteTemplate(w, "cart", injectCommonTemplateData(r, templateData)); err != nil {
 		log.Println(err)
 	}
@@ -443,6 +442,7 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 	log.WithField("order", order.GetOrder().GetOrderId()).Info("order placed")
 
 	http.SetCookie(w, &http.Cookie{Name: cookiePromoCode, Value: "", MaxAge: -1})
+	http.SetCookie(w, &http.Cookie{Name: cookiePromoError, Value: "", MaxAge: -1})
 
 	order.GetOrder().GetItems()
 	recommendations, _ := fe.getRecommendations(r.Context(), sessionID(r), nil)

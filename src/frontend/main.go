@@ -43,7 +43,8 @@ const (
 	cookiePrefix    = "shop_"
 	cookieSessionID = cookiePrefix + "session-id"
 	cookieCurrency  = cookiePrefix + "currency"
-	cookiePromoCode = cookiePrefix + "promo-code"
+	cookiePromoCode  = cookiePrefix + "promo-code"
+	cookiePromoError = cookiePrefix + "promo-error"
 )
 
 var (

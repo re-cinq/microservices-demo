@@ -103,6 +103,11 @@
                                 Code <strong>{{ $.promo_code }}</strong> applied — {{ renderMoney $.promo_savings }} off
                             </small>
                             {{ end }}
+                            {{ if $.promo_error }}
+                            <small class="text-danger mt-1 d-block">
+                                Promo code not recognised — please check the code and try again.
+                            </small>
+                            {{ end }}
                         </div>
                     </div>
 
