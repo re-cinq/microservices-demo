@@ -77,9 +77,10 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type productView struct {
-		Item   *pb.Product
-		Price  *pb.Money
-		Rating float32
+		Item     *pb.Product
+		Price    *pb.Money
+		Rating   float32
+		TopRated bool
 	}
 	ps := make([]productView, len(products))
 	for i, p := range products {
@@ -89,6 +90,20 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ps[i] = productView{Item: p, Price: price, Rating: p.GetRating()}
+	}
+
+	var maxRating float32
+	for _, v := range ps {
+		if v.Rating > maxRating {
+			maxRating = v.Rating
+		}
+	}
+	if maxRating > 0 {
+		for i := range ps {
+			if ps[i].Rating == maxRating {
+				ps[i].TopRated = true
+			}
+		}
 	}
 
 	// Set ENV_PLATFORM (default to local if not set; use env var if set; otherwise detect GCP, which overrides env)_

@@ -2,12 +2,11 @@
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- Active feature: `specs/002-product-list-ratings/`
-- Plan: [`specs/002-product-list-ratings/plan.md`](specs/002-product-list-ratings/plan.md)
-- Spec: [`specs/002-product-list-ratings/spec.md`](specs/002-product-list-ratings/spec.md)
-- Research: [`specs/002-product-list-ratings/research.md`](specs/002-product-list-ratings/research.md)
-- Data model: [`specs/002-product-list-ratings/data-model.md`](specs/002-product-list-ratings/data-model.md)
-- Service contract: [`specs/002-product-list-ratings/contracts/service-contract.md`](specs/002-product-list-ratings/contracts/service-contract.md)
-- UI contract: [`specs/002-product-list-ratings/contracts/ui-contract.md`](specs/002-product-list-ratings/contracts/ui-contract.md)
-- Quickstart: [`specs/002-product-list-ratings/quickstart.md`](specs/002-product-list-ratings/quickstart.md)
+- Active feature: `specs/003-top-rated-badge/`
+- Plan: [`specs/003-top-rated-badge/plan.md`](specs/003-top-rated-badge/plan.md)
+- Spec: [`specs/003-top-rated-badge/spec.md`](specs/003-top-rated-badge/spec.md)
+- Research: [`specs/003-top-rated-badge/research.md`](specs/003-top-rated-badge/research.md)
+- Data model: [`specs/003-top-rated-badge/data-model.md`](specs/003-top-rated-badge/data-model.md)
+- UI contract: [`specs/003-top-rated-badge/contracts/ui-contract.md`](specs/003-top-rated-badge/contracts/ui-contract.md)
+- Quickstart: [`specs/003-top-rated-badge/quickstart.md`](specs/003-top-rated-badge/quickstart.md)
 <!-- SPECKIT END -->
