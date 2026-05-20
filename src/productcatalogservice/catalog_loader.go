@@ -17,6 +17,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -53,6 +54,26 @@ func loadCatalogFromLocalFile(catalog *pb.ListProductsResponse) error {
 	if err := jsonpb.Unmarshal(bytes.NewReader(catalogJSON), catalog); err != nil {
 		log.Warnf("failed to parse the catalog JSON: %v", err)
 		return err
+	}
+
+	// jsonpb resolves fields via the proto binary descriptor and does not pick up
+	// Rating (field 7) until genproto.sh is re-run. Populate it via a second pass.
+	var raw struct {
+		Products []struct {
+			Id     string  `json:"id"`
+			Rating float32 `json:"rating"`
+		} `json:"products"`
+	}
+	if err := json.Unmarshal(catalogJSON, &raw); err != nil {
+		log.Warnf("failed to parse ratings from catalog JSON: %v", err)
+		return err
+	}
+	ratingByID := make(map[string]float32, len(raw.Products))
+	for _, p := range raw.Products {
+		ratingByID[p.Id] = p.Rating
+	}
+	for _, p := range catalog.Products {
+		p.Rating = ratingByID[p.Id]
 	}
 
 	log.Info("successfully parsed product catalog json")

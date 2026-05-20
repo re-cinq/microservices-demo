@@ -675,3 +675,27 @@ the rules below could be extracted.
   width: 10px;
   height: 5px;
 }
+
+/* Star ratings (AIP-154) */
+.star-rating {
+  display: inline-block;
+  font-size: 1rem;
+  color: #f5a623;
+  letter-spacing: 1px;
+}
+
+.star-rating.no-rating {
+  color: #9AA0A6;
+}
+
+.star-rating small {
+  font-size: 0.75rem;
+  color: #9AA0A6;
+  margin-left: 4px;
+}
+
+.hot-product-card .star-rating {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.9rem;
+}

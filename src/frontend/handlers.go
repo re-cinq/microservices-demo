@@ -57,6 +57,7 @@ var (
 				Funcs(template.FuncMap{
 			"renderMoney":        renderMoney,
 			"renderCurrencyLogo": renderCurrencyLogo,
+			"renderStars":        renderStars,
 		}).ParseGlob("templates/*.html"))
 	plat platformDetails
 )
@@ -692,6 +693,27 @@ func renderCurrencyLogo(currencyCode string) string {
 		logo = val
 	}
 	return logo
+}
+
+func renderStars(rating float32) template.HTML {
+	if rating <= 0 {
+		return template.HTML(`<span class="star-rating no-rating" aria-label="no reviews">☆☆☆☆☆ <small>no reviews</small></span>`)
+	}
+	const max = 5
+	full := int(rating)
+	half := rating-float32(full) >= 0.5
+	var stars string
+	for i := 0; i < full; i++ {
+		stars += "★"
+	}
+	if half {
+		stars += "½"
+		full++
+	}
+	for i := full; i < max; i++ {
+		stars += "☆"
+	}
+	return template.HTML(fmt.Sprintf(`<span class="star-rating" aria-label="%.1f out of 5 stars">%s</span>`, rating, stars))
 }
 
 func stringinSlice(slice []string, val string) bool {
