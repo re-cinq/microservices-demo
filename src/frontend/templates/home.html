@@ -58,6 +58,12 @@
 
         </div>
 
+        <div>
+          {{ if $.recently_viewed }}
+            {{ template "recently_viewed" $ }}
+          {{ end }}
+        </div>
+
         <!-- Footer for larger screens. -->
         <div class="row d-none d-lg-block home-desktop-footer-row">
           <div class="col-12 p-0">
