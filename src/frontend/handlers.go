@@ -49,6 +49,11 @@ type WishlistItem struct {
 	Price     pb.Money
 }
 
+type RecentlyViewedItem struct {
+	Item  *pb.Product
+	Price *pb.Money
+}
+
 var (
 	frontendMessage  = strings.TrimSpace(os.Getenv("FRONTEND_MESSAGE"))
 	isCymbalBrand    = "true" == strings.ToLower(os.Getenv("CYMBAL_BRANDING"))
@@ -182,9 +187,31 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// ignores the error retrieving recommendations since it is not critical
+	fe.recordRecentlyViewed(sessionID(r), id)
+
 	recommendations, err := fe.getRecommendations(r.Context(), sessionID(r), []string{id})
 	if err != nil {
 		log.WithField("error", err).Warn("failed to get product recommendations")
+	}
+
+	var recentlyViewedItems []RecentlyViewedItem
+	if v, ok := fe.recentlyViewed.Load(sessionID(r)); ok {
+		for _, pid := range v.([]string) {
+			if pid == id {
+				continue
+			}
+			rp, err := fe.getProduct(r.Context(), pid)
+			if err != nil {
+				log.WithField("product_id", pid).WithField("error", err).Warn("could not retrieve recently viewed product")
+				continue
+			}
+			rprice, err := fe.convertCurrency(r.Context(), rp.GetPriceUsd(), currentCurrency(r))
+			if err != nil {
+				log.WithField("product_id", pid).WithField("error", err).Warn("could not convert recently viewed product price")
+				continue
+			}
+			recentlyViewedItems = append(recentlyViewedItems, RecentlyViewedItem{Item: rp, Price: rprice})
+		}
 	}
 
 	product := struct {
@@ -203,14 +230,15 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := templates.ExecuteTemplate(w, "product", injectCommonTemplateData(r, map[string]interface{}{
-		"ad":              fe.chooseAd(r.Context(), p.Categories, log),
-		"show_currency":   true,
-		"currencies":      currencies,
-		"product":         product,
-		"recommendations": recommendations,
-		"cart_size":       cartSize(cart),
-		"packagingInfo":   packagingInfo,
-		"saved":           r.URL.Query().Get("saved") == "1",
+		"ad":               fe.chooseAd(r.Context(), p.Categories, log),
+		"show_currency":    true,
+		"currencies":       currencies,
+		"product":          product,
+		"recommendations":  recommendations,
+		"recently_viewed":  recentlyViewedItems,
+		"cart_size":        cartSize(cart),
+		"packagingInfo":    packagingInfo,
+		"saved":            r.URL.Query().Get("saved") == "1",
 	})); err != nil {
 		log.Println(err)
 	}
@@ -696,5 +724,16 @@ func (fe *frontendServer) viewWishlistHandler(w http.ResponseWriter, r *http.Req
 		"show_currency": true,
 	})); err != nil {
 		log.Println(err)
+	}
+}
+
+func (fe *frontendServer) recordRecentlyViewed(sid, productID string) {
+	var ids []string
+	if v, ok := fe.recentlyViewed.Load(sid); ok {
+		ids = v.([]string)
+	}
+	if !stringinSlice(ids, productID) {
+		ids = append(ids, productID)
+		fe.recentlyViewed.Store(sid, ids)
 	}
 }

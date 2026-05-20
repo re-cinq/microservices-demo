@@ -88,7 +88,8 @@ type frontendServer struct {
 
 	shoppingAssistantSvcAddr string
 
-	wishlists sync.Map // keyed by session ID (string) → []string of product IDs
+	wishlists      sync.Map // keyed by session ID (string) → []string of product IDs
+	recentlyViewed sync.Map // keyed by session ID (string) → []string of product IDs, insertion order
 }
 
 func main() {
