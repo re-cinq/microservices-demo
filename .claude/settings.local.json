@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__808a6573-ad3c-48e6-a8de-2b6f65079b94__getJiraIssue",
+      "mcp__808a6573-ad3c-48e6-a8de-2b6f65079b94__searchJiraIssuesUsingJql",
+      "Skill(speckit.specify)",
+      "Skill(speckit.specify:*)",
+      "Bash(git checkout *)",
+      "mcp__808a6573-ad3c-48e6-a8de-2b6f65079b94__getConfluencePage",
+      "Skill(speckit.plan)",
+      "Skill(speckit.plan:*)",
+      "Skill(speckit.tasks)",
+      "Skill(speckit.tasks:*)",
+      "Skill(speckit.implement)",
+      "Skill(speckit.implement:*)"
+    ]
+  }
+}
