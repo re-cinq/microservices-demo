@@ -446,6 +446,8 @@ type Product struct {
 	// Categories such as "clothing" or "kitchen" that can be used to look up
 	// other related products.
 	Categories []string `protobuf:"bytes,6,rep,name=categories,proto3" json:"categories,omitempty"`
+	// Star rating 0.0–5.0; 0.0 means no rating recorded.
+	Rating float32 `protobuf:"fixed32,7,opt,name=rating,proto3" json:"rating,omitempty"`
 }
 
 func (x *Product) Reset() {
@@ -520,6 +522,13 @@ func (x *Product) GetCategories() []string {
 		return x.Categories
 	}
 	return nil
+}
+
+func (x *Product) GetRating() float32 {
+	if x != nil {
+		return x.Rating
+	}
+	return 0
 }
 
 type ListProductsResponse struct {
