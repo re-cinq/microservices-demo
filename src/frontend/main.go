@@ -167,6 +167,7 @@ func main() {
 	r.HandleFunc(baseUrl+"/bot", svc.chatBotHandler).Methods(http.MethodPost)
 	r.HandleFunc(baseUrl+"/wishlist", svc.viewWishlistHandler).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc(baseUrl+"/wishlist/save", svc.saveWishlistHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/wishlist/remove", svc.removeWishlistHandler).Methods(http.MethodPost)
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler}     // add logging

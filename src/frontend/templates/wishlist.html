@@ -39,6 +39,10 @@
               <input type="hidden" name="quantity" value="1" />
               <button type="submit" class="cymbal-button-primary btn-sm">Add to Cart</button>
             </form>
+            <form method="POST" action="{{ $.baseUrl }}/wishlist/remove">
+              <input type="hidden" name="product_id" value="{{ .ProductID }}" />
+              <button type="submit" class="cymbal-button-secondary btn-sm">Remove</button>
+            </form>
           </div>
         </div>
       </div>

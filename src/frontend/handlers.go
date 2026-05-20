@@ -727,6 +727,29 @@ func (fe *frontendServer) viewWishlistHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
+func (fe *frontendServer) removeWishlistHandler(w http.ResponseWriter, r *http.Request) {
+	productID := r.FormValue("product_id")
+	if productID == "" {
+		http.Error(w, "product_id is required", http.StatusBadRequest)
+		return
+	}
+	sid := sessionID(r)
+
+	var ids []string
+	if v, ok := fe.wishlists.Load(sid); ok {
+		ids = v.([]string)
+	}
+	filtered := make([]string, 0, len(ids))
+	for _, id := range ids {
+		if id != productID {
+			filtered = append(filtered, id)
+		}
+	}
+	fe.wishlists.Store(sid, filtered)
+
+	http.Redirect(w, r, baseUrl+"/wishlist", http.StatusSeeOther)
+}
+
 func (fe *frontendServer) recordRecentlyViewed(sid, productID string) {
 	var ids []string
 	if v, ok := fe.recentlyViewed.Load(sid); ok {
