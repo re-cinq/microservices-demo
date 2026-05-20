@@ -31,6 +31,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
 	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/money"
@@ -40,6 +42,11 @@ import (
 type platformDetails struct {
 	css      string
 	provider string
+}
+
+type recentlyViewedItem struct {
+	Item  *pb.Product
+	Price *pb.Money
 }
 
 var (
@@ -156,6 +163,11 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve product"), http.StatusInternalServerError)
 		return
 	}
+
+	// Record this product view and write the updated recently viewed cookie (T008).
+	updatedIDs := prependDedup(parseRecentlyViewed(r), id)
+	writeRecentlyViewedCookie(w, updatedIDs)
+
 	currencies, err := fe.getCurrencies(r.Context())
 	if err != nil {
 		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve currencies"), http.StatusInternalServerError)
@@ -180,6 +192,13 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		log.WithField("error", err).Warn("failed to get product recommendations")
 	}
 
+	// Fetch recently viewed strip — exclude the product currently on screen (updatedIDs[0]).
+	recentlyViewed, err := fe.recentlyViewedProducts(r.Context(), updatedIDs[1:], currentCurrency(r))
+	if err != nil {
+		log.WithField("error", err).Warn("failed to get recently viewed products")
+		recentlyViewed = nil
+	}
+
 	product := struct {
 		Item  *pb.Product
 		Price *pb.Money
@@ -196,13 +215,14 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := templates.ExecuteTemplate(w, "product", injectCommonTemplateData(r, map[string]interface{}{
-		"ad":              fe.chooseAd(r.Context(), p.Categories, log),
-		"show_currency":   true,
-		"currencies":      currencies,
-		"product":         product,
-		"recommendations": recommendations,
-		"cart_size":       cartSize(cart),
-		"packagingInfo":   packagingInfo,
+		"ad":               fe.chooseAd(r.Context(), p.Categories, log),
+		"show_currency":    true,
+		"currencies":       currencies,
+		"product":          product,
+		"recommendations":  recommendations,
+		"recently_viewed":  recentlyViewed,
+		"cart_size":        cartSize(cart),
+		"packagingInfo":    packagingInfo,
 	})); err != nil {
 		log.Println(err)
 	}
@@ -632,4 +652,66 @@ func stringinSlice(slice []string, val string) bool {
 		}
 	}
 	return false
+}
+
+// parseRecentlyViewed reads the recently viewed product IDs from the request cookie.
+// Returns nil if the cookie is absent or empty.
+func parseRecentlyViewed(r *http.Request) []string {
+	c, err := r.Cookie(cookieRecentlyViewed)
+	if err != nil || c.Value == "" {
+		return nil
+	}
+	raw := strings.Split(c.Value, "|")
+	ids := make([]string, 0, len(raw))
+	for _, id := range raw {
+		if id != "" {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
+
+// prependDedup prepends id to ids, removes any existing occurrence of id, and caps the result at 5.
+func prependDedup(ids []string, id string) []string {
+	filtered := make([]string, 0, len(ids))
+	for _, existing := range ids {
+		if existing != id {
+			filtered = append(filtered, existing)
+		}
+	}
+	result := append([]string{id}, filtered...)
+	if len(result) > 5 {
+		result = result[:5]
+	}
+	return result
+}
+
+// writeRecentlyViewedCookie persists ids to the recently viewed cookie.
+func writeRecentlyViewedCookie(w http.ResponseWriter, ids []string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:   cookieRecentlyViewed,
+		Value:  strings.Join(ids, "|"),
+		MaxAge: cookieMaxAge,
+	})
+}
+
+// recentlyViewedProducts fetches full product details for the given IDs, applying currency
+// conversion. IDs that no longer exist in the catalogue are silently skipped.
+func (fe *frontendServer) recentlyViewedProducts(ctx context.Context, ids []string, currency string) ([]recentlyViewedItem, error) {
+	items := make([]recentlyViewedItem, 0, len(ids))
+	for _, id := range ids {
+		p, err := fe.getProduct(ctx, id)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				continue
+			}
+			return nil, err
+		}
+		price, err := fe.convertCurrency(ctx, p.GetPriceUsd(), currency)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, recentlyViewedItem{Item: p, Price: price})
+	}
+	return items, nil
 }

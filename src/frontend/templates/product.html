@@ -73,6 +73,11 @@
     </div>
   </div>
   <div>
+    {{ if $.recently_viewed }}
+      {{ template "recently_viewed" $ }}
+    {{ end }}
+  </div>
+  <div>
     {{ if $.recommendations}}
       {{ template "recommendations" $ }}
     {{ end }}
