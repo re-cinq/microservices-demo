@@ -50,6 +50,7 @@ var (
 				Funcs(template.FuncMap{
 			"renderMoney":        renderMoney,
 			"renderCurrencyLogo": renderCurrencyLogo,
+			"highlightQuery":     highlightQuery,
 		}).ParseGlob("templates/*.html"))
 	plat platformDetails
 )
@@ -415,6 +416,75 @@ func (fe *frontendServer) assistantHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+func (fe *frontendServer) searchHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	log.WithField("query", q).Info("search")
+
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve currencies"), http.StatusInternalServerError)
+		return
+	}
+	cart, err := fe.getCart(r.Context(), sessionID(r))
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve cart"), http.StatusInternalServerError)
+		return
+	}
+
+	if len([]rune(q)) < 2 {
+		if err := templates.ExecuteTemplate(w, "search", injectCommonTemplateData(r, map[string]interface{}{
+			"show_currency":    true,
+			"currencies":       currencies,
+			"cart_size":        cartSize(cart),
+			"query":            q,
+			"validation_error": "Please enter at least 2 characters to search.",
+		})); err != nil {
+			log.Error(err)
+		}
+		return
+	}
+
+	products, err := fe.searchProducts(r.Context(), q)
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not search products"), http.StatusInternalServerError)
+		return
+	}
+	products = rankSearchResults(products, q)
+
+	type searchResultView struct {
+		Item                *pb.Product
+		Price               *pb.Money
+		HighlightedName     template.HTML
+		HighlightedDescription template.HTML
+	}
+	results := make([]searchResultView, len(products))
+	for i, p := range products {
+		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+		if err != nil {
+			renderHTTPError(log, r, w, errors.Wrapf(err, "failed to convert currency for product %s", p.GetId()), http.StatusInternalServerError)
+			return
+		}
+		results[i] = searchResultView{
+			Item:                   p,
+			Price:                  price,
+			HighlightedName:        highlightQuery(p.GetName(), q),
+			HighlightedDescription: highlightQuery(p.GetDescription(), q),
+		}
+	}
+
+	if err := templates.ExecuteTemplate(w, "search", injectCommonTemplateData(r, map[string]interface{}{
+		"show_currency": true,
+		"currencies":    currencies,
+		"cart_size":     cartSize(cart),
+		"query":         q,
+		"results":       results,
+		"result_count":  len(results),
+	})); err != nil {
+		log.Error(err)
+	}
+}
+
 func (fe *frontendServer) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.Debug("logging out")
@@ -561,6 +631,7 @@ func injectCommonTemplateData(r *http.Request, payload map[string]interface{}) m
 		"frontendMessage":   frontendMessage,
 		"currentYear":       time.Now().Year(),
 		"baseUrl":           baseUrl,
+		"search_query":      strings.TrimSpace(r.URL.Query().Get("q")),
 	}
 
 	for k, v := range payload {

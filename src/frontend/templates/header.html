@@ -88,6 +88,20 @@
                     </a>
                     {{ end }}
 
+                    <form method="GET" action="{{ $.baseUrl }}/search" class="search-form" onsubmit="return validateSearchQuery(this)">
+                        <input type="text" name="q" value="{{ $.search_query }}" placeholder="Search products…" class="search-input" aria-label="Search products" />
+                        <button type="submit" class="search-button" aria-label="Submit search">
+                            <img src="{{ $.baseUrl }}/static/icons/Hipster_SearchIcon.svg" alt="Search" onerror="this.replaceWith(document.createTextNode('🔍'))" />
+                        </button>
+                    </form>
+                    <script>
+                    function validateSearchQuery(form) {
+                        var q = form.q.value.trim();
+                        if (q.length < 2) { form.q.focus(); return false; }
+                        return true;
+                    }
+                    </script>
+
                     <a href="{{ $.baseUrl }}/cart" class="cart-link">
                         <img src="{{ $.baseUrl }}/static/icons/Hipster_CartIcon.svg" alt="Cart icon" class="logo" title="Cart" />
                         {{ if $.cart_size }}

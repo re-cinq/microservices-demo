@@ -675,3 +675,137 @@ the rules below could be extracted.
   width: 10px;
   height: 5px;
 }
+
+/* ── Search feature ────────────────────────────────────────────── */
+
+/* Header search bar */
+.search-form {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+}
+.search-input {
+  border: 1px solid #9AA0A6;
+  border-radius: 4px 0 0 4px;
+  padding: 6px 10px;
+  font-size: 14px;
+  outline: none;
+  width: 160px;
+  color: #1E2021;
+}
+.search-input:focus {
+  border-color: #5C6063;
+}
+.search-button {
+  background: #ffffff;
+  border: 1px solid #9AA0A6;
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  padding: 5px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.search-button img {
+  width: 18px;
+  height: 18px;
+}
+.search-button:hover {
+  background: #f1f3f4;
+}
+
+/* Search results page */
+.search-page {
+  padding: 24px 0 48px;
+}
+.search-bar-row {
+  margin-bottom: 24px;
+}
+.search-page-form {
+  display: flex;
+  align-items: center;
+  max-width: 480px;
+}
+.search-page-input {
+  flex: 1;
+  border: 1px solid #9AA0A6;
+  border-radius: 4px 0 0 4px;
+  padding: 10px 14px;
+  font-size: 16px;
+  outline: none;
+  color: #1E2021;
+}
+.search-page-input:focus {
+  border-color: #5C6063;
+}
+.search-page-button {
+  border-radius: 0 4px 4px 0;
+  padding: 10px 20px;
+}
+
+/* Validation / empty state messages */
+.search-validation-error {
+  margin-top: 8px;
+  color: #d93025;
+  font-size: 14px;
+}
+.search-no-results {
+  margin-top: 16px;
+  font-size: 16px;
+  color: #5C6063;
+}
+.search-result-summary {
+  margin-bottom: 16px;
+  color: #5C6063;
+  font-size: 14px;
+}
+
+/* Result cards — reuse hot-product-card style */
+.search-results-grid {
+  margin-top: 8px;
+}
+.search-result-card {
+  margin-bottom: 32px;
+}
+.search-result-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.search-result-link:hover {
+  text-decoration: none;
+  color: inherit;
+}
+.search-result-img {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.search-result-name {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.search-result-desc {
+  font-size: 13px;
+  color: #5C6063;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.search-result-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1E2021;
+}
+
+/* Highlight matched text */
+mark {
+  background-color: #fdd835;
+  color: inherit;
+  padding: 0 1px;
+  border-radius: 2px;
+}

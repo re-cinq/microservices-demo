@@ -1,0 +1,67 @@
+<!--
+ Copyright 2024 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+{{ define "search" }}
+{{ template "header" . }}
+
+<main role="main" class="search-page">
+  <div class="container">
+
+    <div class="search-bar-row">
+      <form method="GET" action="{{ $.baseUrl }}/search" class="search-page-form">
+        <input
+          type="text"
+          name="q"
+          value="{{ $.query }}"
+          placeholder="Search products…"
+          class="search-page-input"
+          aria-label="Search products"
+          autofocus
+        />
+        <button type="submit" class="cymbal-button-primary search-page-button">Search</button>
+      </form>
+      {{ if $.validation_error }}
+      <p class="search-validation-error">{{ $.validation_error }}</p>
+      {{ end }}
+    </div>
+
+    {{ if not $.validation_error }}
+      {{ if $.results }}
+        <p class="search-result-summary">
+          {{ $.result_count }} result{{ if ne $.result_count 1 }}s{{ end }} for &#8220;{{ $.query }}&#8221;
+        </p>
+        <div class="row search-results-grid">
+          {{ range $.results }}
+          <div class="col-md-4 search-result-card">
+            <a href="{{ $.baseUrl }}/product/{{ .Item.Id }}" class="search-result-link">
+              <img loading="lazy" src="{{ $.baseUrl }}{{ .Item.Picture }}" alt="{{ .Item.Name }}" class="search-result-img" />
+              <div class="search-result-name">{{ .HighlightedName }}</div>
+              <div class="search-result-desc">{{ .HighlightedDescription }}</div>
+              <div class="search-result-price">{{ renderMoney .Price }}</div>
+            </a>
+          </div>
+          {{ end }}
+        </div>
+      {{ else }}
+        <p class="search-no-results">No products found for &#8220;{{ $.query }}&#8221;.</p>
+      {{ end }}
+    {{ end }}
+
+  </div>
+</main>
+
+{{ template "footer" . }}
+{{ end }}
