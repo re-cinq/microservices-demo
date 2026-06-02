@@ -64,6 +64,21 @@
                     <img src="{{ $.baseUrl }}/static/icons/Hipster_NavLogo.svg" alt="" class="top-left-logo" />
                     {{ end }}
                 </a>
+                <div class="header-search" style="position:relative; width:440px; display:flex; align-items:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#888" viewBox="0 0 16 16"
+                        style="position:absolute; left:10px; pointer-events:none;">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+                    </svg>
+                    <input
+                        type="text"
+                        id="product-search"
+                        class="form-control"
+                        placeholder="Search products…"
+                        autocomplete="off"
+                        style="width:100%; padding-left:34px;"
+                    />
+                </div>
+
                 <div class="controls">
 
                     {{ if $.show_currency }}
@@ -99,4 +114,36 @@
         </div>
 
     </header>
+    <script>
+      (function () {
+        // Only show the search box on the homepage (path is "/" or "")
+        var isHome = window.location.pathname === '/' || window.location.pathname === '';
+        var input = document.getElementById('product-search');
+        if (!input) return;
+
+        if (!isHome) {
+          input.closest('.header-search').style.display = 'none';
+          return;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+          var cards = document.querySelectorAll('.hot-product-card');
+          var noResults = document.getElementById('no-results-msg');
+
+          input.addEventListener('input', function () {
+            var query = input.value.trim().toLowerCase();
+            var visible = 0;
+
+            cards.forEach(function (card) {
+              var name = card.querySelector('.hot-product-card-name').textContent.toLowerCase();
+              var match = query === '' || name.includes(query);
+              card.style.display = match ? '' : 'none';
+              if (match) visible++;
+            });
+
+            if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+          });
+        });
+      })();
+    </script>
     {{end}}
