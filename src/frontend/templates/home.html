@@ -37,6 +37,18 @@
 
       <div class="col-12 col-lg-12 px-10-percent">
 
+        <div class="row product-search-row px-xl-6">
+          <div class="col-12">
+            <div class="product-search-field">
+              <img class="product-search-icon" src="{{ $.baseUrl }}/static/icons/Hipster_SearchIcon.svg" alt="">
+              <label class="product-search-label" for="product-search-input">Search products</label>
+              <input type="text" id="product-search-input" class="product-search-input"
+                     placeholder="Search products by name" autocomplete="off"
+                     aria-label="Search products by name">
+            </div>
+          </div>
+        </div>
+
         <div class="row hot-products-row px-xl-6">
 
           <div class="col-12">
@@ -55,6 +67,10 @@
             </div>
           </div>
           {{ end }}
+
+          <div id="product-search-no-results" class="col-12 product-search-no-results d-none">
+            No products match your search.
+          </div>
 
         </div>
 
@@ -76,5 +92,7 @@
 <div class="d-lg-none">
   {{ template "footer" . }}
 </div>
+
+<script src="{{ $.baseUrl }}/static/js/product-search.js" defer></script>
 
 {{ end }}

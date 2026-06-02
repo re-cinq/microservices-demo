@@ -675,3 +675,54 @@ the rules below could be extracted.
   width: 10px;
   height: 5px;
 }
+
+/* Product search (client-side name filter) */
+.product-search-row {
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.product-search-field {
+  position: relative;
+  max-width: 420px;
+}
+
+.product-search-icon {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Visually-hidden label kept for screen readers (input also has aria-label). */
+.product-search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.product-search-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #9AA0A6;
+  padding: 0 16px 8px 28px;
+  outline: none;
+  color: #1E2021;
+  background: transparent;
+}
+
+.product-search-no-results {
+  padding: 24px 0;
+  color: #5F6368;
+  font-style: italic;
+}
