@@ -322,6 +322,10 @@ main {
   font-weight: normal;
 }
 
+.search-bar-row {
+  margin-bottom: 1.5rem;
+}
+
 .hot-products-row {
   padding-bottom: 70px;
   padding-left: 10%;

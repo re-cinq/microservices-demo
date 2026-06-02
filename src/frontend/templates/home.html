@@ -43,8 +43,22 @@
             <h3>Hot Products</h3>
           </div>
 
+          <div class="col-12 search-bar-row">
+            <input
+              id="product-search"
+              type="search"
+              class="form-control"
+              placeholder="Search products…"
+              aria-label="Search products"
+              autocomplete="off"
+            >
+          </div>
+          <div id="no-results-message" style="display:none;" class="col-12 text-center py-4">
+            No products match your search.
+          </div>
+
           {{ range $.products }}
-          <div class="col-md-4 hot-product-card">
+          <div class="col-md-4 hot-product-card" data-name="{{ .Item.Name }}">
             <a href="{{ $.baseUrl }}/product/{{.Item.Id}}">
               <img loading="lazy" src="{{ $.baseUrl }}{{.Item.Picture}}">
               <div class="hot-product-card-img-overlay"></div>
@@ -76,5 +90,7 @@
 <div class="d-lg-none">
   {{ template "footer" . }}
 </div>
+
+<script src="{{ $.baseUrl }}/static/scripts/product-search.js" defer></script>
 
 {{ end }}
