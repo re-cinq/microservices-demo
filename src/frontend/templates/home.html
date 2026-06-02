@@ -43,6 +43,20 @@
             <h3>Hot Products</h3>
           </div>
 
+          <div class="col-12 mb-3">
+            <input type="search"
+                   id="product-search"
+                   class="form-control"
+                   placeholder="Search products"
+                   aria-label="Search products"
+                   autocomplete="off">
+          </div>
+          <p id="no-results-msg"
+             class="col-12 text-muted"
+             style="display:none;">
+            No products match your search.
+          </p>
+
           {{ range $.products }}
           <div class="col-md-4 hot-product-card">
             <a href="{{ $.baseUrl }}/product/{{.Item.Id}}">
@@ -76,5 +90,28 @@
 <div class="d-lg-none">
   {{ template "footer" . }}
 </div>
+
+<script>
+  (function () {
+    var input = document.getElementById('product-search');
+    var cards = document.querySelectorAll('.hot-product-card');
+    var noMsg = document.getElementById('no-results-msg');
+
+    input.addEventListener('input', function () {
+      var term    = input.value.toLowerCase();
+      var visible = 0;
+
+      cards.forEach(function (card) {
+        var name = card.querySelector('.hot-product-card-name')
+                      .textContent.toLowerCase();
+        var show = name.includes(term);
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+
+      noMsg.style.display = (term.length > 0 && visible === 0) ? '' : 'none';
+    });
+  })();
+</script>
 
 {{ end }}
