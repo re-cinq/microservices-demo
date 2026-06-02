@@ -9,21 +9,23 @@ All changes are confined to `src/frontend/`. No Go code, `.proto`, gRPC, infra, 
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm working tree is on the `001-product-search` feature branch (off `attendee/jost-werdenhoff`) and clean enough to start (`git status`). Implementation work stays on this branch and merges back via PR (C-7).
-- [ ] T002 Locate the home stylesheet that styles `.hot-product-card` (search `src/frontend/static/styles/` for `hot-product-card`) so the new CSS rule lands in the right file. Record the path for T007.
+- [x] T001 Confirm working tree is on the `001-product-search` feature branch (off `attendee/jost-werdenhoff`) and clean enough to start (`git status`). Implementation work stays on this branch and merges back via PR (C-7).
+- [x] T002 Locate the home stylesheet that styles `.hot-product-card` → `src/frontend/static/styles/styles.css` (rules at lines ~331–369). Recorded for T007.
 
 ## Phase 2: Foundational (blocks all user stories)
 
-- [ ] T003 In `src/frontend/templates/home.html`, add `data-product-name="{{ .Item.Name }}"` to the product card div at `home.html:47` (`<div class="col-md-4 hot-product-card" ...>`). This is the match source for the filter (plan D-2). Verify Go template still parses (page renders).
+- [x] T003 In `src/frontend/templates/home.html`, added `data-product-name="{{ .Item.Name }}"` to the product card div (`<div class="col-md-4 hot-product-card" ...>`). This is the match source for the filter (plan D-2). Same `.Item.Name` field already rendered in the card, so the template parses in the existing range context.
 
 ## Phase 3: User Story 1 — Filter products by typing a name (P1)
 
 **Goal**: Typing in the search box narrows the grid by name, in-browser, no reload. Independently testable = MVP.
 
-- [ ] T004 In `src/frontend/templates/home.html`, add the search control above the grid (near `home.html:42`): a visible `<label for="product-search">Search products</label>` and `<input type="search" id="product-search" autocomplete="off" placeholder="Search products by name">` (FR-001, FR-010, plan D-4).
-- [ ] T005 In `src/frontend/templates/home.html`, add the no-results element near the search control: `<p id="search-no-results" role="status" aria-live="polite" hidden>No products match your search.</p>` (FR-006, FR-011, plan D-5).
-- [ ] T006 In `src/frontend/templates/home.html`, add the inline `<script>` near the end of the home content implementing the filter (plan D-2/D-3/D-6): listen to the input's `input` event; lowercase + trim the query; for each `.hot-product-card`, substring-match `data-product-name`; toggle a `hot-product-card--hidden` class; track visible count; toggle the no-results `<p>`'s `hidden`. Guard with `if (!input) return;` for graceful degradation. Never call `.focus()` (FR-002, FR-003, FR-004, FR-005, FR-008, FR-012).
-- [ ] T007 In the stylesheet found in T002, add `.hot-product-card--hidden { display: none; }` (plan D-3 — this also removes hidden cards from tab order/AT, satisfying FR-013). Add light styling for the search input/label/no-results text consistent with existing Bootstrap look.
+- [x] T004 In `src/frontend/templates/home.html`, added the search control above the grid (after the "Hot Products" heading): a visible `<label for="product-search">Search products</label>` and `<input type="search" id="product-search" autocomplete="off" placeholder="Search products by name">` (FR-001, FR-010, plan D-4).
+- [x] T005 In `src/frontend/templates/home.html`, added the no-results element near the search control: `<p id="search-no-results" role="status" aria-live="polite" hidden>No products match your search.</p>` (FR-006, FR-011, plan D-5).
+- [x] T006 In `src/frontend/templates/home.html`, added the inline `<script>` near the end of the home content (plan D-2/D-3/D-6): listens to the input's `input` event; lowercases + trims the query; for each `.hot-product-card`, substring-matches `data-product-name`; toggles the `hot-product-card--hidden` class; tracks visible count; toggles the no-results `<p>`'s `hidden`. Guarded with `if (!input) return;` for graceful degradation. Never calls `.focus()` (FR-002, FR-003, FR-004, FR-005, FR-008, FR-012).
+- [x] T007 In `src/frontend/static/styles/styles.css`, added `.hot-product-card--hidden { display: none; }` (plan D-3 — also removes hidden cards from tab order/AT, satisfying FR-013) plus styling for `.product-search`, `.product-search-label`, `.product-search-input`, and `.product-search-no-results`, consistent with the existing look.
+
+> **Verification tasks T008–T016 require the running app.** `go` is not installed locally and the frontend needs the other microservices (gRPC). These are intended to be run against the **deployed training URL** after the branch is pushed and the PR merges to `attendee/jost-werdenhoff` (CI deploy), or against a full local stack if available. They remain unchecked until then.
 
 ### US1 Checkpoint — verify scenarios 1–5 (manual, in browser)
 - [ ] T008 Verify FR-002/003/004/005: load home page → type `watch` (only Watch visible) → `WATCH` (same result) → `sun` (Sunglasses visible) → clear (all products return, original order) → `zzzzz` (no cards, no-results message shown). Maps to spec scenarios 1–5, SC-001/002/003.

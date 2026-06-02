@@ -368,6 +368,35 @@ main {
   background-color: rgba(71, 0, 29, 0.2);
 }
 
+/* Product search: hidden cards are removed from layout, tab order, and a11y tree. */
+.hot-product-card--hidden {
+  display: none;
+}
+
+.product-search {
+  margin-bottom: 32px;
+}
+
+.product-search-label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.product-search-input {
+  width: 100%;
+  max-width: 360px;
+  padding: 8px 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.product-search-no-results {
+  margin-top: 16px;
+  font-size: 16px;
+}
+
 /*
 This chunk ensures the left/right padding of the footer is
 similar to that of the hot-products-row.

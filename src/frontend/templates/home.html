@@ -43,8 +43,17 @@
             <h3>Hot Products</h3>
           </div>
 
+          <div class="col-12 product-search">
+            <label for="product-search" class="product-search-label">Search products</label>
+            <input type="search" id="product-search" class="product-search-input"
+                   autocomplete="off" placeholder="Search products by name">
+            <p id="search-no-results" class="product-search-no-results" role="status" aria-live="polite" hidden>
+              No products match your search.
+            </p>
+          </div>
+
           {{ range $.products }}
-          <div class="col-md-4 hot-product-card">
+          <div class="col-md-4 hot-product-card" data-product-name="{{ .Item.Name }}">
             <a href="{{ $.baseUrl }}/product/{{.Item.Id}}">
               <img loading="lazy" src="{{ $.baseUrl }}{{.Item.Picture}}">
               <div class="hot-product-card-img-overlay"></div>
@@ -76,5 +85,26 @@
 <div class="d-lg-none">
   {{ template "footer" . }}
 </div>
+
+<!-- Product search: filters the already-rendered product grid by name, in the browser. -->
+<script>
+  (function () {
+    var input = document.getElementById('product-search');
+    if (!input) { return; } // graceful degradation: full grid still renders without JS
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.hot-product-card'));
+    var noResults = document.getElementById('search-no-results');
+    input.addEventListener('input', function () {
+      var query = input.value.trim().toLowerCase();
+      var visible = 0;
+      for (var i = 0; i < cards.length; i++) {
+        var name = (cards[i].getAttribute('data-product-name') || '').toLowerCase();
+        var match = query === '' || name.indexOf(query) !== -1;
+        cards[i].classList.toggle('hot-product-card--hidden', !match);
+        if (match) { visible++; }
+      }
+      if (noResults) { noResults.hidden = !(query !== '' && visible === 0); }
+    });
+  })();
+</script>
 
 {{ end }}
