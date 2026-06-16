@@ -77,6 +77,9 @@
       {{ template "recommendations" $ }}
     {{ end }}
   </div>
+  <div>
+    {{ template "recently_viewed" $ }}
+  </div>
   <div class="ad">
    {{ if $.ad }}{{ template "text_ad" $ }}{{ end }}
   </div>
