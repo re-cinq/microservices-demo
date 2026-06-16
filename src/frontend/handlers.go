@@ -42,6 +42,39 @@ type platformDetails struct {
 	provider string
 }
 
+type productView struct {
+	Item  *pb.Product
+	Price *pb.Money
+}
+
+type categoryGroup struct {
+	Name     string
+	Slug     string
+	Products []productView
+}
+
+func groupByCategory(products []productView) []categoryGroup {
+	var groups []categoryGroup
+	index := map[string]int{}
+	for _, p := range products {
+		slug := "other"
+		if cats := p.Item.GetCategories(); len(cats) > 0 {
+			slug = cats[0]
+		}
+		if i, ok := index[slug]; ok {
+			groups[i].Products = append(groups[i].Products, p)
+		} else {
+			index[slug] = len(groups)
+			groups = append(groups, categoryGroup{
+				Name:     slug,
+				Slug:     slug,
+				Products: []productView{p},
+			})
+		}
+	}
+	return groups
+}
+
 var (
 	frontendMessage  = strings.TrimSpace(os.Getenv("FRONTEND_MESSAGE"))
 	isCymbalBrand    = "true" == strings.ToLower(os.Getenv("CYMBAL_BRANDING"))
@@ -75,10 +108,6 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type productView struct {
-		Item  *pb.Product
-		Price *pb.Money
-	}
 	ps := make([]productView, len(products))
 	for i, p := range products {
 		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
@@ -111,6 +140,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"show_currency": true,
 		"currencies":    currencies,
 		"products":      ps,
+		"categories":    groupByCategory(ps),
 		"cart_size":     cartSize(cart),
 		"banner_color":  os.Getenv("BANNER_COLOR"), // illustrates canary deployments
 		"ad":            fe.chooseAd(r.Context(), []string{}, log),

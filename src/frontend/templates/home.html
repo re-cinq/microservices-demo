@@ -40,10 +40,16 @@
         <div class="row hot-products-row px-xl-6">
 
           <div class="col-12">
-            <h3>Hot Products</h3>
+            <nav aria-label="Product categories">
+              {{ range $.categories }}<a href="#{{.Slug}}" style="margin-right:1rem;">{{.Name}}</a>{{ end }}
+            </nav>
           </div>
 
-          {{ range $.products }}
+          {{ range $.categories }}
+          <div class="col-12">
+            <h3 id="{{.Slug}}">{{.Name}}</h3>
+          </div>
+          {{ range .Products }}
           <div class="col-md-4 hot-product-card">
             <a href="{{ $.baseUrl }}/product/{{.Item.Id}}">
               <img loading="lazy" src="{{ $.baseUrl }}{{.Item.Picture}}">
@@ -54,6 +60,7 @@
               <div class="hot-product-card-price">{{ renderMoney .Price }}</div>
             </div>
           </div>
+          {{ end }}
           {{ end }}
 
         </div>
