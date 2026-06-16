@@ -185,6 +185,24 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		Price *pb.Money
 	}{p, price}
 
+	// Build the "recently viewed" strip from products viewed earlier this
+	// session, most-recently-viewed first and excluding the product being
+	// viewed now. Products that can no longer be retrieved (e.g. removed from
+	// the catalogue) are skipped so the strip never breaks the page.
+	var recentlyViewed []*pb.Product
+	for _, rvID := range fe.recentlyViewed.List(sessionID(r), id, 4) {
+		rp, err := fe.getProduct(r.Context(), rvID)
+		if err != nil {
+			log.WithField("id", rvID).WithField("error", err).
+				Debug("skipping recently viewed product that could not be retrieved")
+			continue
+		}
+		recentlyViewed = append(recentlyViewed, rp)
+	}
+	// Record this view after building the strip so the current product never
+	// appears in its own strip.
+	fe.recentlyViewed.Record(sessionID(r), id)
+
 	// Fetch packaging info (weight/dimensions) of the product
 	// The packaging service is an optional microservice you can run as part of a Google Cloud demo.
 	var packagingInfo *PackagingInfo = nil
@@ -201,6 +219,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"currencies":      currencies,
 		"product":         product,
 		"recommendations": recommendations,
+		"recently_viewed": recentlyViewed,
 		"cart_size":       cartSize(cart),
 		"packagingInfo":   packagingInfo,
 	})); err != nil {

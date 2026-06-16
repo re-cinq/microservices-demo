@@ -86,6 +86,8 @@ type frontendServer struct {
 	collectorConn *grpc.ClientConn
 
 	shoppingAssistantSvcAddr string
+
+	recentlyViewed *recentlyViewedStore
 }
 
 func main() {
@@ -103,6 +105,7 @@ func main() {
 	log.Out = os.Stdout
 
 	svc := new(frontendServer)
+	svc.recentlyViewed = newRecentlyViewedStore()
 
 	otel.SetTextMapPropagator(
 		propagation.NewCompositeTextMapPropagator(
