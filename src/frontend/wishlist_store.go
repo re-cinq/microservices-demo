@@ -69,3 +69,20 @@ func (s *wishlistStore) Contains(sessionID, productID string) bool {
 	}
 	return false
 }
+
+// Remove deletes productID from the session's saved set. It is a no-op if the
+// product was not saved or the IDs are empty.
+func (s *wishlistStore) Remove(sessionID, productID string) {
+	if sessionID == "" || productID == "" {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	ids := s.items[sessionID]
+	for i, id := range ids {
+		if id == productID {
+			s.items[sessionID] = append(ids[:i], ids[i+1:]...)
+			return
+		}
+	}
+}

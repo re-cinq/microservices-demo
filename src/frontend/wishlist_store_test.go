@@ -55,6 +55,26 @@ func TestWishlistStore_Contains(t *testing.T) {
 	}
 }
 
+func TestWishlistStore_Remove(t *testing.T) {
+	s := newWishlistStore()
+	s.Add("sess-1", "OLJCESPC7Z")
+	s.Add("sess-1", "66VCHSJNUP")
+
+	s.Remove("sess-1", "OLJCESPC7Z")
+	if s.Contains("sess-1", "OLJCESPC7Z") {
+		t.Errorf("product still saved after Remove")
+	}
+	// The other product is untouched.
+	if !s.Contains("sess-1", "66VCHSJNUP") {
+		t.Errorf("Remove deleted the wrong product")
+	}
+	// Removing something not saved is a no-op (no panic, no change).
+	s.Remove("sess-1", "NOTSAVED")
+	if got := s.List("sess-1"); len(got) != 1 {
+		t.Errorf("expected 1 product after no-op Remove, got %v", got)
+	}
+}
+
 func TestWishlistStore_SessionsAreIsolated(t *testing.T) {
 	s := newWishlistStore()
 	s.Add("sess-1", "OLJCESPC7Z")

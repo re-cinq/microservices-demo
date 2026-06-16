@@ -70,14 +70,17 @@
               <button type="submit" class="cymbal-button-primary">Add To Cart</button>
             </form>
 
+            {{ if $.product_saved }}
+            <form method="POST" action="{{ $.baseUrl }}/wishlist/remove">
+              <input type="hidden" name="product_id" value="{{$.product.Item.Id}}" />
+              <button type="submit" class="cymbal-button-secondary" title="Remove from saved">Saved ✓</button>
+            </form>
+            {{ else }}
             <form method="POST" action="{{ $.baseUrl }}/wishlist">
               <input type="hidden" name="product_id" value="{{$.product.Item.Id}}" />
-              {{ if $.product_saved }}
-              <button type="submit" class="cymbal-button-secondary" disabled>Saved ✓</button>
-              {{ else }}
               <button type="submit" class="cymbal-button-secondary">Save for later</button>
-              {{ end }}
             </form>
+            {{ end }}
           </div>
         </div>
       </div>

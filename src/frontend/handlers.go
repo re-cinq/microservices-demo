@@ -234,6 +234,20 @@ func (fe *frontendServer) saveProductHandler(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusFound)
 }
 
+func (fe *frontendServer) removeProductHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	productID := r.FormValue("product_id")
+	if productID == "" {
+		w.Header().Set("location", baseUrl+"/")
+		w.WriteHeader(http.StatusFound)
+		return
+	}
+	fe.wishlistStore.Remove(sessionID(r), productID)
+	log.WithField("product", productID).Debug("removed product from wishlist")
+	w.Header().Set("location", baseUrl+"/product/"+productID)
+	w.WriteHeader(http.StatusFound)
+}
+
 func (fe *frontendServer) viewWishlistHandler(w http.ResponseWriter, r *http.Request) {
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	currencies, err := fe.getCurrencies(r.Context())
