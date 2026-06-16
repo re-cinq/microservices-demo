@@ -195,6 +195,20 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
+	// Record this view and write the updated cookie.
+	existing := recentlyViewedIDs(r)
+	updated := addRecentlyViewed(existing, id)
+	http.SetCookie(w, &http.Cookie{
+		Name:     cookieRecentlyViewed,
+		Value:    strings.Join(updated, ","),
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	// Resolve stored IDs against the live catalogue (satisfies ACs 3–5).
+	allProducts, _ := fe.getProducts(r.Context())
+	recentProducts := excludeProduct(filterByLiveCatalogue(updated, allProducts), id)
+
 	if err := templates.ExecuteTemplate(w, "product", injectCommonTemplateData(r, map[string]interface{}{
 		"ad":              fe.chooseAd(r.Context(), p.Categories, log),
 		"show_currency":   true,
@@ -203,6 +217,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"recommendations": recommendations,
 		"cart_size":       cartSize(cart),
 		"packagingInfo":   packagingInfo,
+		"recently_viewed": recentProducts,
 	})); err != nil {
 		log.Println(err)
 	}
@@ -632,4 +647,49 @@ func stringinSlice(slice []string, val string) bool {
 		}
 	}
 	return false
+}
+
+func recentlyViewedIDs(r *http.Request) []string {
+	c, err := r.Cookie(cookieRecentlyViewed)
+	if err != nil || c.Value == "" {
+		return []string{}
+	}
+	return strings.Split(c.Value, ",")
+}
+
+func addRecentlyViewed(existing []string, id string) []string {
+	out := []string{id}
+	for _, v := range existing {
+		if v != id {
+			out = append(out, v)
+		}
+	}
+	if len(out) > 5 {
+		out = out[:5]
+	}
+	return out
+}
+
+func filterByLiveCatalogue(ids []string, products []*pb.Product) []*pb.Product {
+	index := make(map[string]*pb.Product, len(products))
+	for _, p := range products {
+		index[p.GetId()] = p
+	}
+	var out []*pb.Product
+	for _, id := range ids {
+		if p, ok := index[id]; ok {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+func excludeProduct(products []*pb.Product, id string) []*pb.Product {
+	var out []*pb.Product
+	for _, p := range products {
+		if p.GetId() != id {
+			out = append(out, p)
+		}
+	}
+	return out
 }
