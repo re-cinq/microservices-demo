@@ -86,6 +86,9 @@ type frontendServer struct {
 	collectorConn *grpc.ClientConn
 
 	shoppingAssistantSvcAddr string
+
+	// wishlistStore holds per-session saved products in memory (no datastore).
+	wishlistStore *wishlistStore
 }
 
 func main() {
@@ -103,6 +106,7 @@ func main() {
 	log.Out = os.Stdout
 
 	svc := new(frontendServer)
+	svc.wishlistStore = newWishlistStore()
 
 	otel.SetTextMapPropagator(
 		propagation.NewCompositeTextMapPropagator(
@@ -155,6 +159,8 @@ func main() {
 	r.HandleFunc(baseUrl+"/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)
 	r.HandleFunc(baseUrl+"/logout", svc.logoutHandler).Methods(http.MethodGet)
 	r.HandleFunc(baseUrl+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/wishlist", svc.viewWishlistHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(baseUrl+"/wishlist", svc.saveProductHandler).Methods(http.MethodPost)
 	r.HandleFunc(baseUrl+"/assistant", svc.assistantHandler).Methods(http.MethodGet)
 	r.PathPrefix(baseUrl + "/static/").Handler(http.StripPrefix(baseUrl+"/static/", http.FileServer(http.Dir("./static/"))))
 	r.HandleFunc(baseUrl+"/robots.txt", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "User-agent: *\nDisallow: /") })
