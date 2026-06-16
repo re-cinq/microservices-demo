@@ -29,7 +29,7 @@ Go unit tests for the store and `net/http/httptest` handler tests. Written test-
 
 **Purpose**: Establish a green baseline before changes.
 
-- [ ] T001 Establish baseline: from `src/frontend`, confirm `go build ./...` and `go test ./...` succeed before any edits.
+- [X] T001 Establish baseline: from `src/frontend`, confirm `go build ./...` and `go test ./...` succeed. (Go 1.26.4 installed; `go build ./...` and full `go test ./...` pass.)
 
 ---
 
@@ -55,21 +55,21 @@ one session. Empty state shows for a fresh session.
 
 ### Tests for User Story 1 (write first; ensure they FAIL before implementation) ⚠️
 
-- [ ] T002 [P] [US1] Write failing unit tests for the in-memory store in `src/frontend/wishlist_store_test.go`: Add is idempotent (no duplicate, FR-007), List returns saved IDs in save order, Contains reflects saved state (FR-002), and collections are isolated per session ID.
-- [ ] T003 [P] [US1] Write failing handler tests in `src/frontend/wishlist_handlers_test.go` using `net/http/httptest`: `POST /wishlist` with `product_id` saves and 302-redirects (FR-001); `GET /wishlist` renders saved products with links when present (FR-003/FR-005) and the empty-state message when none (FR-008).
+- [X] T002 [P] [US1] Write failing unit tests for the in-memory store in `src/frontend/wishlist_store_test.go`: Add is idempotent (no duplicate, FR-007), List returns saved IDs in save order, Contains reflects saved state (FR-002), and collections are isolated per session ID.
+- [X] T003 [P] [US1] Write failing handler tests in `src/frontend/wishlist_handlers_test.go` using `net/http/httptest`: `POST /wishlist` with `product_id` saves and 302-redirects (FR-001); `GET /wishlist` renders saved products with links when present (FR-003/FR-005) and the empty-state message when none (FR-008).
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Implement the in-memory store in `src/frontend/wishlist_store.go`: a mutex-guarded `map[sessionID]orderedSet` with `Add`, `List`, `Contains` per data-model.md; makes T002 pass. (depends on T002)
-- [ ] T005 [US1] Add a `*wishlistStore` field to `frontendServer` and initialize it in `src/frontend/main.go`. (depends on T004)
-- [ ] T006 [US1] Implement `saveProductHandler` in `src/frontend/handlers.go`: read `product_id` via `r.FormValue`, validate it resolves via the existing catalogue helper (`fe.getProduct`), call `store.Add(sessionID(r), id)`, and `http.Redirect` back to the product page — mirroring `addToCartHandler`. (depends on T004, T005)
-- [ ] T007 [US1] Implement `viewWishlistHandler` in `src/frontend/handlers.go`: `store.List(sessionID(r))`, resolve each ID via `fe.getProduct` (skip IDs no longer in the catalogue), and render `wishlist.html` with the products and an empty-state flag. (depends on T004, T005)
-- [ ] T008 [US1] In `productHandler` (`src/frontend/handlers.go`), pass a `product_saved` boolean from `store.Contains(sessionID(r), id)` into the product template data (FR-002). (depends on T004, T005)
-- [ ] T009 [US1] Register routes in `src/frontend/main.go`: `POST {baseUrl}/wishlist` → `saveProductHandler`, `GET {baseUrl}/wishlist` → `viewWishlistHandler`. (depends on T006, T007)
-- [ ] T010 [P] [US1] Create `src/frontend/templates/wishlist.html`: list saved products each linking to `{baseUrl}/product/{id}`, plus an empty-state message with a prompt to browse (FR-003/FR-005/FR-008).
-- [ ] T011 [P] [US1] In `src/frontend/templates/product.html`, add a "Save" `POST` form (hidden `product_id`) to `{baseUrl}/wishlist` styled like Add To Cart, and show saved vs. unsaved using `product_saved` (FR-001/FR-002).
-- [ ] T012 [P] [US1] In `src/frontend/templates/header.html`, add a saved-products link to `{baseUrl}/wishlist` present on every page — **no count** (count is AIP-195) (FR-004).
-- [ ] T013 [US1] Run `go test ./...` in `src/frontend` and confirm the store and handler tests (T002, T003) now pass. (depends on T004–T012)
+- [X] T004 [US1] Implement the in-memory store in `src/frontend/wishlist_store.go`: a mutex-guarded `map[sessionID]orderedSet` with `Add`, `List`, `Contains` per data-model.md; makes T002 pass. (depends on T002)
+- [X] T005 [US1] Add a `*wishlistStore` field to `frontendServer` and initialize it in `src/frontend/main.go`. (depends on T004)
+- [X] T006 [US1] Implement `saveProductHandler` in `src/frontend/handlers.go`: read `product_id` via `r.FormValue`, validate it resolves via the existing catalogue helper (`fe.getProduct`), call `store.Add(sessionID(r), id)`, and `http.Redirect` back to the product page — mirroring `addToCartHandler`. (depends on T004, T005)
+- [X] T007 [US1] Implement `viewWishlistHandler` in `src/frontend/handlers.go`: `store.List(sessionID(r))`, resolve each ID via `fe.getProduct` (skip IDs no longer in the catalogue), and render `wishlist.html` with the products and an empty-state flag. (depends on T004, T005)
+- [X] T008 [US1] In `productHandler` (`src/frontend/handlers.go`), pass a `product_saved` boolean from `store.Contains(sessionID(r), id)` into the product template data (FR-002). (depends on T004, T005)
+- [X] T009 [US1] Register routes in `src/frontend/main.go`: `POST {baseUrl}/wishlist` → `saveProductHandler`, `GET {baseUrl}/wishlist` → `viewWishlistHandler`. (depends on T006, T007)
+- [X] T010 [P] [US1] Create `src/frontend/templates/wishlist.html`: list saved products each linking to `{baseUrl}/product/{id}`, plus an empty-state message with a prompt to browse (FR-003/FR-005/FR-008).
+- [X] T011 [P] [US1] In `src/frontend/templates/product.html`, add a "Save" `POST` form (hidden `product_id`) to `{baseUrl}/wishlist` styled like Add To Cart, and show saved vs. unsaved using `product_saved` (FR-001/FR-002).
+- [X] T012 [P] [US1] In `src/frontend/templates/header.html`, add a saved-products link to `{baseUrl}/wishlist` present on every page — **no count** (count is AIP-195) (FR-004).
+- [X] T013 [US1] Run `go test ./...` in `src/frontend` and confirm the store and handler tests (T002, T003) now pass. (depends on T004–T012) ✓ All 8 new tests pass; full frontend/money/validator suite green.
 
 **Checkpoint**: User Story 1 fully functional and independently testable = the MVP.
 
@@ -77,9 +77,9 @@ one session. Empty state shows for a fresh session.
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T014 [P] Run `gofmt -w` and `go vet ./...` on the changed files in `src/frontend`.
-- [ ] T015 Execute `specs/001-save-products/quickstart.md` manual validation (scenarios 1–6, incl. idempotency and the unavailable-product edge case).
-- [ ] T016 Constitution spot-check: confirm `git status` shows changes only under `src/frontend/` (plus the spec docs) — no new service, no new datastore, no infra/manifest/CI edits (Principles I, II, IV).
+- [X] T014 [P] Run `gofmt -w` and `go vet ./...` on the changed files in `src/frontend`. (New files gofmt-clean. `go vet` "copies lock value" warnings are pre-existing in `money/` and original `handlers.go`, not from this change. `handlers.go` has 3 pre-existing `baseUrl + "/"` spacing nits left untouched to keep the diff focused.)
+- [ ] T015 Execute `specs/001-save-products/quickstart.md` manual validation (scenarios 1–6, incl. idempotency and the unavailable-product edge case). ⚠️ BLOCKED — requires the running app (frontend + backing services).
+- [X] T016 Constitution spot-check: confirm `git status` shows changes only under `src/frontend/` (plus the spec docs) — no new service, no new datastore, no infra/manifest/CI edits (Principles I, II, IV).
 
 ---
 

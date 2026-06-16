@@ -203,8 +203,78 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"recommendations": recommendations,
 		"cart_size":       cartSize(cart),
 		"packagingInfo":   packagingInfo,
+		"product_saved":   fe.wishlistStore.Contains(sessionID(r), id),
 	})); err != nil {
 		log.Println(err)
+	}
+}
+
+func (fe *frontendServer) saveProductHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	productID := r.FormValue("product_id")
+	if productID == "" {
+		// Nothing to save; return to the store rather than erroring.
+		w.Header().Set("location", baseUrl+"/")
+		w.WriteHeader(http.StatusFound)
+		return
+	}
+
+	// Only save products that exist in the catalogue. An unknown product is
+	// rejected gracefully (redirect home, no save) rather than 500ing.
+	if _, err := fe.getProduct(r.Context(), productID); err != nil {
+		log.WithField("product", productID).WithField("error", err).Warn("save rejected: unknown product")
+		w.Header().Set("location", baseUrl+"/")
+		w.WriteHeader(http.StatusFound)
+		return
+	}
+
+	fe.wishlistStore.Add(sessionID(r), productID)
+	log.WithField("product", productID).Debug("saved product to wishlist")
+	w.Header().Set("location", baseUrl+"/product/"+productID)
+	w.WriteHeader(http.StatusFound)
+}
+
+func (fe *frontendServer) viewWishlistHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	currencies, err := fe.getCurrencies(r.Context())
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve currencies"), http.StatusInternalServerError)
+		return
+	}
+	cart, err := fe.getCart(r.Context(), sessionID(r))
+	if err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve cart"), http.StatusInternalServerError)
+		return
+	}
+
+	type productView struct {
+		Item  *pb.Product
+		Price *pb.Money
+	}
+	var ps []productView
+	for _, id := range fe.wishlistStore.List(sessionID(r)) {
+		p, err := fe.getProduct(r.Context(), id)
+		if err != nil {
+			// A saved product that is no longer in the catalogue is skipped so the
+			// saved view still renders the remaining valid products.
+			log.WithField("product", id).WithField("error", err).Warn("skipping unavailable saved product")
+			continue
+		}
+		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+		if err != nil {
+			renderHTTPError(log, r, w, errors.Wrapf(err, "failed to convert currency for product %s", id), http.StatusInternalServerError)
+			return
+		}
+		ps = append(ps, productView{p, price})
+	}
+
+	if err := templates.ExecuteTemplate(w, "wishlist", injectCommonTemplateData(r, map[string]interface{}{
+		"show_currency": true,
+		"currencies":    currencies,
+		"products":      ps,
+		"cart_size":     cartSize(cart),
+	})); err != nil {
+		log.Error(err)
 	}
 }
 
