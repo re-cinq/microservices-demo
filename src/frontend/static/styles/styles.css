@@ -485,6 +485,12 @@ similar to that of the hot-products-row.
   margin-top: 16px;
 }
 
+.h-product .product-actions {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
 /* Platform Banner */
 
 .local,
