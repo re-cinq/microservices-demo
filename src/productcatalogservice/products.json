@@ -10,7 +10,8 @@
                 "units": 19,
                 "nanos": 990000000
             },
-            "categories": ["accessories"]
+            "categories": ["accessories"],
+            "rating": 4.6
         },
         {
             "id": "66VCHSJNUP",
@@ -22,7 +23,8 @@
                 "units": 18,
                 "nanos": 990000000
             },
-            "categories": ["clothing", "tops"]
+            "categories": ["clothing", "tops"],
+            "rating": 3.8
         },
         {
             "id": "1YMWWN1N4O",
@@ -34,7 +36,8 @@
                 "units": 109,
                 "nanos": 990000000
             },
-            "categories": ["accessories"]
+            "categories": ["accessories"],
+            "rating": 4.9
         },
         {
             "id": "L9ECAV7KIM",
@@ -46,7 +49,8 @@
                 "units": 89,
                 "nanos": 990000000
             },
-            "categories": ["footwear"]
+            "categories": ["footwear"],
+            "rating": 4.1
         },
         {
             "id": "2ZYFJ3GM2N",
@@ -58,7 +62,8 @@
                 "units": 24,
                 "nanos": 990000000
             },
-            "categories": ["hair", "beauty"]
+            "categories": ["hair", "beauty"],
+            "rating": 3.5
         },
         {
             "id": "0PUK6V6EV0",
@@ -70,7 +75,8 @@
                 "units": 18,
                 "nanos": 990000000
             },
-            "categories": ["decor", "home"]
+            "categories": ["decor", "home"],
+            "rating": 4.3
         },
         {
             "id": "LS4PSXUNUM",
@@ -82,7 +88,8 @@
                 "units": 18,
                 "nanos": 490000000
             },
-            "categories": ["kitchen"]
+            "categories": ["kitchen"],
+            "rating": 4.7
         },
         {
             "id": "9SIQT8TOJO",
@@ -94,7 +101,8 @@
                 "units": 5,
                 "nanos": 490000000
             },
-            "categories": ["kitchen"]
+            "categories": ["kitchen"],
+            "rating": 4.2
         },
         {
             "id": "6E92ZMYYFZ",
@@ -106,7 +114,8 @@
                 "units": 8,
                 "nanos": 990000000
             },
-            "categories": ["kitchen"]
+            "categories": ["kitchen"],
+            "rating": 3.9
         }
     ]
 }

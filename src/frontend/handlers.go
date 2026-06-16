@@ -42,6 +42,18 @@ type platformDetails struct {
 	provider string
 }
 
+var productRatings = map[string]float32{
+	"OLJCESPC7Z": 4.6,
+	"66VCHSJNUP": 3.8,
+	"1YMWWN1N4O": 4.9,
+	"L9ECAV7KIM": 4.1,
+	"2ZYFJ3GM2N": 3.5,
+	"0PUK6V6EV0": 4.3,
+	"LS4PSXUNUM": 4.7,
+	"9SIQT8TOJO": 4.2,
+	"6E92ZMYYFZ": 3.9,
+}
+
 var (
 	frontendMessage  = strings.TrimSpace(os.Getenv("FRONTEND_MESSAGE"))
 	isCymbalBrand    = "true" == strings.ToLower(os.Getenv("CYMBAL_BRANDING"))
@@ -218,6 +230,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"cart_size":       cartSize(cart),
 		"packagingInfo":   packagingInfo,
 		"recently_viewed": recentProducts,
+		"rating":          productRatings[id],
 	})); err != nil {
 		log.Println(err)
 	}
