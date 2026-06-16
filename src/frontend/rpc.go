@@ -54,6 +54,12 @@ func (fe *frontendServer) getProduct(ctx context.Context, id string) (*pb.Produc
 	return resp, err
 }
 
+func (fe *frontendServer) rateProduct(ctx context.Context, productID string, stars int32) error {
+	_, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
+		RateProduct(ctx, &pb.RateProductRequest{ProductId: productID, Stars: stars})
+	return err
+}
+
 func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*pb.CartItem, error) {
 	resp, err := pb.NewCartServiceClient(fe.cartSvcConn).GetCart(ctx, &pb.GetCartRequest{UserId: userID})
 	return resp.GetItems(), err

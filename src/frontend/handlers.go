@@ -50,6 +50,7 @@ var (
 				Funcs(template.FuncMap{
 			"renderMoney":        renderMoney,
 			"renderCurrencyLogo": renderCurrencyLogo,
+			"renderStars":        renderStars,
 		}).ParseGlob("templates/*.html"))
 	plat platformDetails
 )
@@ -233,6 +234,34 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	w.Header().Set("location", baseUrl + "/cart")
+	w.WriteHeader(http.StatusFound)
+}
+
+func (fe *frontendServer) rateProductHandler(w http.ResponseWriter, r *http.Request) {
+	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
+	id := mux.Vars(r)["id"]
+	if id == "" {
+		renderHTTPError(log, r, w, errors.New("product id not specified"), http.StatusBadRequest)
+		return
+	}
+
+	stars, err := strconv.ParseInt(r.FormValue("rating"), 10, 32)
+	if err != nil || stars < 1 || stars > 5 {
+		// Invalid input: leave the aggregate untouched and return to the page.
+		log.WithField("product", id).WithField("rating", r.FormValue("rating")).
+			Warn("ignoring invalid product rating submission")
+		w.Header().Set("location", baseUrl+"/product/"+id)
+		w.WriteHeader(http.StatusFound)
+		return
+	}
+
+	if err := fe.rateProduct(r.Context(), id, int32(stars)); err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "failed to submit product rating"), http.StatusInternalServerError)
+		return
+	}
+	log.WithField("product", id).WithField("rating", stars).Debug("submitted product rating")
+
+	w.Header().Set("location", baseUrl+"/product/"+id)
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -606,6 +635,19 @@ func cartSize(c []*pb.CartItem) int {
 func renderMoney(money pb.Money) string {
 	currencyLogo := renderCurrencyLogo(money.GetCurrencyCode())
 	return fmt.Sprintf("%s%d.%02d", currencyLogo, money.GetUnits(), money.GetNanos()/10000000)
+}
+
+// renderStars renders an average rating as five star glyphs, rounding to the
+// nearest whole star (e.g. 4.3 -> ★★★★☆).
+func renderStars(rating float32) string {
+	filled := int(rating + 0.5)
+	if filled < 0 {
+		filled = 0
+	}
+	if filled > 5 {
+		filled = 5
+	}
+	return strings.Repeat("★", filled) + strings.Repeat("☆", 5-filled)
 }
 
 func renderCurrencyLogo(currencyCode string) string {

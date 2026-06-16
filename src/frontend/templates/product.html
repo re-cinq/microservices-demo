@@ -33,6 +33,28 @@
 
           <h2>{{ $.product.Item.Name }}</h2>
           <p class="product-price">{{ renderMoney $.product.Price }}</p>
+
+          <p class="product-rating">
+            {{ if gt $.product.Item.NumRatings 0 }}
+              <span class="product-rating-stars">{{ renderStars $.product.Item.Rating }}</span>
+              ({{ $.product.Item.NumRatings }})
+            {{ else }}
+              <span class="product-rating-empty">No ratings yet</span>
+            {{ end }}
+          </p>
+
+          <form method="POST" action="{{ $.baseUrl }}/product/{{ $.product.Item.Id }}/rate" class="product-rating-form">
+            <label for="rating">Rate this product:</label>
+            <select name="rating" id="rating">
+              <option value="5">5 stars</option>
+              <option value="4">4 stars</option>
+              <option value="3">3 stars</option>
+              <option value="2">2 stars</option>
+              <option value="1">1 star</option>
+            </select>
+            <button type="submit" class="cymbal-button-primary">Submit rating</button>
+          </form>
+
           <p>{{ $.product.Item.Description }}</p>
 
           {{ if $.packagingInfo }}

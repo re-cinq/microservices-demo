@@ -72,6 +72,7 @@ service ProductCatalogService {
     rpc ListProducts(Empty) returns (ListProductsResponse) {}
     rpc GetProduct(GetProductRequest) returns (Product) {}
     rpc SearchProducts(SearchProductsRequest) returns (SearchProductsResponse) {}
+    rpc RateProduct(RateProductRequest) returns (Empty) {}
 }
 
 message Product {
@@ -84,6 +85,17 @@ message Product {
     // Categories such as "clothing" or "kitchen" that can be used to look up
     // other related products.
     repeated string categories = 6;
+
+    // Average of submitted star ratings (1-5). 0 when num_ratings is 0.
+    float rating = 7;
+    // Number of ratings submitted. 0 means the product has no ratings yet.
+    int32 num_ratings = 8;
+}
+
+message RateProductRequest {
+    string product_id = 1;
+    // Whole-number star rating in the range 1-5.
+    int32 stars = 2;
 }
 
 message ListProductsResponse {

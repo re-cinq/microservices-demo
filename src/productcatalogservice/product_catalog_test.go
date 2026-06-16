@@ -99,3 +99,82 @@ func TestSearchProducts(t *testing.T) {
 		t.Errorf("got %d, want %d", got, want)
 	}
 }
+
+// newRatingCatalog returns an isolated catalog with a single product, so
+// rating tests do not share aggregate state.
+func newRatingCatalog() *productCatalog {
+	return &productCatalog{
+		catalog: pb.ListProductsResponse{
+			Products: []*pb.Product{{Id: "abc001", Name: "Product Alpha One"}},
+		},
+	}
+}
+
+func TestRateProductRecordsRating(t *testing.T) {
+	pc := newRatingCatalog()
+	if _, err := pc.RateProduct(context.Background(),
+		&pb.RateProductRequest{ProductId: "abc001", Stars: 4}); err != nil {
+		t.Fatal(err)
+	}
+
+	product, err := pc.GetProduct(context.Background(), &pb.GetProductRequest{Id: "abc001"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := product.NumRatings, int32(1); got != want {
+		t.Errorf("NumRatings: got %d, want %d", got, want)
+	}
+	if got, want := product.Rating, float32(4); got != want {
+		t.Errorf("Rating: got %v, want %v", got, want)
+	}
+}
+
+func TestRateProductAveragesMultiple(t *testing.T) {
+	pc := newRatingCatalog()
+	for _, stars := range []int32{5, 4, 3} { // average 4.0
+		if _, err := pc.RateProduct(context.Background(),
+			&pb.RateProductRequest{ProductId: "abc001", Stars: stars}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	product, err := pc.GetProduct(context.Background(), &pb.GetProductRequest{Id: "abc001"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := product.NumRatings, int32(3); got != want {
+		t.Errorf("NumRatings: got %d, want %d", got, want)
+	}
+	if got, want := product.Rating, float32(4); got != want {
+		t.Errorf("Rating: got %v, want %v", got, want)
+	}
+}
+
+func TestRateProductRejectsOutOfRange(t *testing.T) {
+	pc := newRatingCatalog()
+	for _, stars := range []int32{0, 6, -1} {
+		_, err := pc.RateProduct(context.Background(),
+			&pb.RateProductRequest{ProductId: "abc001", Stars: stars})
+		if got, want := status.Code(err), codes.InvalidArgument; got != want {
+			t.Errorf("stars=%d: got %s, want %s", stars, got, want)
+		}
+	}
+
+	// Aggregate must be untouched after rejected submissions.
+	product, err := pc.GetProduct(context.Background(), &pb.GetProductRequest{Id: "abc001"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := product.NumRatings, int32(0); got != want {
+		t.Errorf("NumRatings after rejects: got %d, want %d", got, want)
+	}
+}
+
+func TestRateProductUnknownProduct(t *testing.T) {
+	pc := newRatingCatalog()
+	_, err := pc.RateProduct(context.Background(),
+		&pb.RateProductRequest{ProductId: "does-not-exist", Stars: 3})
+	if got, want := status.Code(err), codes.NotFound; got != want {
+		t.Errorf("got %s, want %s", got, want)
+	}
+}
