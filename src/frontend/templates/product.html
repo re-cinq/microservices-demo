@@ -35,9 +35,9 @@
           <p class="product-price">{{ renderMoney $.product.Price }}</p>
 
           <p class="product-rating">
-            {{ if gt $.product.Item.NumRatings 0 }}
-              <span class="product-rating-stars">{{ renderStars $.product.Item.Rating }}</span>
-              ({{ $.product.Item.NumRatings }})
+            {{ if gt $.product.NumRatings 0 }}
+              <span class="product-rating-stars">{{ renderStars $.product.Rating }}</span>
+              ({{ $.product.NumRatings }})
             {{ else }}
               <span class="product-rating-empty">No ratings yet</span>
             {{ end }}

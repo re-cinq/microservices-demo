@@ -181,10 +181,13 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		log.WithField("error", err).Warn("failed to get product recommendations")
 	}
 
+	ratingAvg, ratingCount := productRatings.get(id)
 	product := struct {
-		Item  *pb.Product
-		Price *pb.Money
-	}{p, price}
+		Item       *pb.Product
+		Price      *pb.Money
+		Rating     float32
+		NumRatings int32
+	}{p, price, ratingAvg, ratingCount}
 
 	// Fetch packaging info (weight/dimensions) of the product
 	// The packaging service is an optional microservice you can run as part of a Google Cloud demo.
@@ -255,10 +258,12 @@ func (fe *frontendServer) rateProductHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if err := fe.rateProduct(r.Context(), id, int32(stars)); err != nil {
-		renderHTTPError(log, r, w, errors.Wrap(err, "failed to submit product rating"), http.StatusInternalServerError)
+	// Confirm the product exists before recording a rating for it.
+	if _, err := fe.getProduct(r.Context(), id); err != nil {
+		renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve product"), http.StatusInternalServerError)
 		return
 	}
+	productRatings.record(id, int32(stars))
 	log.WithField("product", id).WithField("rating", stars).Debug("submitted product rating")
 
 	w.Header().Set("location", baseUrl+"/product/"+id)
